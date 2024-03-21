@@ -25,6 +25,6 @@ public class Empresa {
     private String email;
     @Column(name = "saldo")
     private BigDecimal saldo;
-    @ManyToMany(mappedBy = "empresas")
-    private Set<Cliente> cliente;
+    @Column(name = "taxa_sistema")
+    private BigDecimal taxaSistema;
 }
