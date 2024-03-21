@@ -15,4 +15,19 @@ public class EmpresaService {
     public List<Empresa> findAllEmpresa() {
         return empresaRepository.findAll();
     }
+
+    public Empresa save(Empresa empresa) {
+        String cnpj = cnpjTruncado(empresa);
+        empresa.setCnpj(cnpj);
+        return empresaRepository.save(empresa);
+    }
+
+    private String cnpjTruncado(Empresa empresa) {
+        String cnpj = empresa.getCnpj();
+        if(cnpj.length() == 18) {
+            String cnpjTruncado = cnpj.replaceAll("[./-]", "");
+            return cnpjTruncado;
+        }
+        return cnpj;
+    }
 }

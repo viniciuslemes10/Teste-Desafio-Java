@@ -1,7 +1,9 @@
 package com.tigd.api.domain;
 
+import com.tigd.api.dto.EmpresaDTO;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.validator.constraints.br.CNPJ;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -19,6 +21,7 @@ public class Empresa {
     private Long id;
     @Column(name = "nome")
     private String nome;
+    @CNPJ(message = "CNPJ inválido")
     @Column(name = "cnpj", unique = true)
     private String cnpj;
     @Column(name = "email", unique = true)
@@ -27,4 +30,16 @@ public class Empresa {
     private BigDecimal saldo;
     @Column(name = "taxa_sistema")
     private BigDecimal taxaSistema;
+
+    public Empresa(EmpresaDTO empresaDTO) {
+        this.nome = empresaDTO.nome();
+        this.cnpj = empresaDTO.cnpj();
+        this.email = empresaDTO.email();
+        this.saldo = empresaDTO.saldo();
+        if (empresaDTO.taxaSistema() == null) {
+            this.taxaSistema = BigDecimal.valueOf(0.01);
+        } else {
+            this.taxaSistema = empresaDTO.taxaSistema();
+        }
+    }
 }
