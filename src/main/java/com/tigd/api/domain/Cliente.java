@@ -1,4 +1,4 @@
-package domain;
+package com.tigd.api.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,5 +30,5 @@ public class Cliente {
             joinColumns = @JoinColumn(name = "cliente_id"),
             inverseJoinColumns = @JoinColumn(name = "empresa_id")
     )
-    private Set<Empresa> empresa;
+    private Set<Empresa> empresas;
 }
