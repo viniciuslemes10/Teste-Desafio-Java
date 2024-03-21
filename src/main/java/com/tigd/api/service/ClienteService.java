@@ -16,4 +16,19 @@ public class ClienteService {
     public List<Cliente> findAllClients() {
         return clienteRepository.findAll();
     }
+
+    public Cliente save(Cliente cliente) {
+        String cpfTruncado = cpfTruncado(cliente);
+        cliente.setCpf(cpfTruncado);
+        return clienteRepository.save(cliente);
+    }
+
+    private String cpfTruncado(Cliente cliente) {
+        String cpf = cliente.getCpf();
+        if(cpf.length() == 14) {
+            String cpfTruncado = cpf.replaceAll("[.-]", "");
+            return cpfTruncado;
+        }
+        return cpf;
+    }
 }

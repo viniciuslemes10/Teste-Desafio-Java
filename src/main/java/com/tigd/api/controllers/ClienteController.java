@@ -1,13 +1,14 @@
 package com.tigd.api.controllers;
 
+import com.tigd.api.dto.ClienteDTO;
 import com.tigd.api.service.ClienteService;
 import com.tigd.api.domain.Cliente;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -21,5 +22,15 @@ public class ClienteController {
         List<Cliente> cliente = service.findAllClients();
         return ResponseEntity.ok(cliente);
     }
+
+    @PostMapping
+    public ResponseEntity<Cliente> createClient(@RequestBody ClienteDTO clienteDTO, UriComponentsBuilder uriComponentsBuilder) {
+        Cliente cliente = new Cliente(clienteDTO);
+        Cliente clienteSave = service.save(cliente);
+        URI uri = uriComponentsBuilder.buildAndExpand(clienteSave).toUri();
+        return ResponseEntity.created(uri).body(clienteSave);
+    }
+
+
 
 }
