@@ -25,10 +25,4 @@ public class Cliente {
     private String email;
     @Column(name = "saldo")
     private BigDecimal saldo;
-    @ManyToMany
-    @JoinTable(name = "cliente_empresa",
-            joinColumns = @JoinColumn(name = "cliente_id"),
-            inverseJoinColumns = @JoinColumn(name = "empresa_id")
-    )
-    private Set<Empresa> empresas;
 }
