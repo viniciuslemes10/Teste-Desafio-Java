@@ -3,6 +3,7 @@ package com.tigd.api.service;
 import com.tigd.api.domain.Cliente;
 import com.tigd.api.domain.Empresa;
 import com.tigd.api.domain.Transacao;
+import com.tigd.api.exceptions.SaldoNegativoException;
 import com.tigd.api.repository.TransacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -83,7 +84,7 @@ public class TransacaoService {
 
     private void verificarSaldoSuficiente(BigDecimal saldo, BigDecimal valorTransacao) {
         if (saldo.compareTo(valorTransacao) < 0) {
-            throw new IllegalArgumentException("Saldo insuficiente");
+            throw new SaldoNegativoException();
         }
     }
 

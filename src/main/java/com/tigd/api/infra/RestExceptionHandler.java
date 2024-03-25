@@ -4,6 +4,7 @@ import com.tigd.api.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -36,6 +37,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     private ResponseEntity<RestErrorMenssage> atributeCnpjUnique(CnpjUniqueException exception) {
         RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.CONFLICT, exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(restError);
+    }
+
+    @ExceptionHandler(SaldoNegativoException.class)
+    private ResponseEntity<RestErrorMenssage> saldoInsuficiente(SaldoNegativoException exception) {
+        RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restError);
     }
 
 }
