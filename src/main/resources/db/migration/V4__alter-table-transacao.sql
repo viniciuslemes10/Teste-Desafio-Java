@@ -1,0 +1,1 @@
+ALTER TABLE transacao ADD COLUMN tipo char(1) not null;
