@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 
 public record EmpresaDTO(
         String nome,
-        @CNPJ(message = "CNPJ inválido")
         String cnpj,
         String email,
         BigDecimal saldo,

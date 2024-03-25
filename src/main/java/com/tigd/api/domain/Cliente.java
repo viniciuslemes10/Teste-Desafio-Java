@@ -35,4 +35,15 @@ public class Cliente {
         this.email = clienteDTO.email();
         this.saldo = clienteDTO.saldo();
     }
+
+    @Override
+    public String toString() {
+        return "Cliente{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", cpf='" + cpf + '\'' +
+                ", email='" + email + '\'' +
+                ", saldo=" + saldo +
+                '}';
+    }
 }

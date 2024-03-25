@@ -1,33 +1,68 @@
 package com.tigd.api.service;
 
 import com.tigd.api.domain.Empresa;
+import com.tigd.api.exceptions.CnpjUniqueException;
+import com.tigd.api.exceptions.EmailUniqueException;
 import com.tigd.api.repository.EmpresaRepository;
+import com.tigd.api.validators.DocumentValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmpresaService {
     @Autowired
     private EmpresaRepository empresaRepository;
 
+    @Autowired
+    private DocumentValidator documentValidator;
+
     public List<Empresa> findAllEmpresa() {
         return empresaRepository.findAll();
     }
 
     public Empresa save(Empresa empresa) {
-        String cnpj = cnpjTruncado(empresa);
-        empresa.setCnpj(cnpj);
+        String documentCnpj = documentValidator.isValid(empresa.getCnpj(), "empresa");
+        empresa.setCnpj(documentCnpj);
+        isPresentEmail(empresa);
+        isPresentCnpj(empresa);
         return empresaRepository.save(empresa);
     }
 
-    private String cnpjTruncado(Empresa empresa) {
-        String cnpj = empresa.getCnpj();
-        if(cnpj.length() == 18) {
-            String cnpjTruncado = cnpj.replaceAll("[./-]", "");
-            return cnpjTruncado;
+    public Empresa atualizarSaldo(Empresa empresa) {
+        return empresaRepository.save(empresa);
+    }
+
+    private void isPresentCnpj(Empresa empresa) {
+        boolean empresas = findByCnpj(empresa);
+
+        if (empresas) {
+            throw new CnpjUniqueException();
         }
-        return cnpj;
+
+    }
+
+    private boolean findByCnpj(Empresa empresa) {
+        Empresa empresas = empresaRepository.findByCnpj(empresa.getCnpj());
+        return empresas != null;
+    }
+
+    private void isPresentEmail(Empresa empresa) {
+        boolean empresaEmail = findByEmail(empresa);
+
+        if(empresaEmail) {
+            throw new EmailUniqueException();
+        }
+    }
+
+    private boolean findByEmail(Empresa empresa) {
+        Empresa empresaEmail = empresaRepository.findByEmail(empresa.getEmail());
+        return empresaEmail != null;
+    }
+
+    public Optional<Empresa> findById(Long id) {
+        return empresaRepository.findById(id);
     }
 }
