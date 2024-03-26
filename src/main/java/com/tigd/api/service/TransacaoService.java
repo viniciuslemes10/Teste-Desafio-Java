@@ -3,13 +3,15 @@ package com.tigd.api.service;
 import com.tigd.api.domain.Cliente;
 import com.tigd.api.domain.Empresa;
 import com.tigd.api.domain.Transacao;
+import com.tigd.api.exceptions.ElementNotFoundException;
 import com.tigd.api.exceptions.SaldoNegativoException;
 import com.tigd.api.repository.TransacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -41,8 +43,15 @@ public class TransacaoService {
 
 
     public Transacao processarTransacao(Transacao transacao) {
-        Optional<Cliente> cliente = clienteService.findById(transacao.getCliente().getId());
-        Optional<Empresa> empresa = empresaService.findById(transacao.getEmpresa().getId());
+        Optional<Empresa> empresa = Optional.ofNullable(findValidClientOrCompany(empresaService
+                .findById(transacao
+                        .getEmpresa()
+                        .getId())));
+
+        Optional<Cliente> cliente = Optional.ofNullable(findValidClientOrCompany(clienteService
+                .findById(transacao
+                        .getCliente()
+                        .getId()))) ;
 
         BigDecimal valorTransacao = transacao.getValor();
         BigDecimal taxaSistema = empresa.get().getTaxaSistema();
@@ -56,6 +65,10 @@ public class TransacaoService {
 
         save(transacao);
         return transacao;
+    }
+
+    private <T> T findValidClientOrCompany(Optional<T> optional) {
+        return optional.orElseThrow(ElementNotFoundException::new);
     }
 
     private void processarDebito(Cliente cliente, Empresa empresa, BigDecimal valorTransacao, BigDecimal taxaSistema) {
@@ -89,5 +102,7 @@ public class TransacaoService {
     }
 
 
-
+    public List<Transacao> findAllTransacoes() {
+        return repository.findAll();
+    }
 }
