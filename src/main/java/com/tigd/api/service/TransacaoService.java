@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -51,7 +50,7 @@ public class TransacaoService {
         Optional<Cliente> cliente = Optional.ofNullable(findValidClientOrCompany(clienteService
                 .findById(transacao
                         .getCliente()
-                        .getId()))) ;
+                        .getId())));
 
         BigDecimal valorTransacao = transacao.getValor();
         BigDecimal taxaSistema = empresa.get().getTaxaSistema();
