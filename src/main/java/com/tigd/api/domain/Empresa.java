@@ -1,6 +1,7 @@
 package com.tigd.api.domain;
 
 import com.tigd.api.dto.EmpresaDTO;
+import com.tigd.api.dto.EmpresaUpdateDTO;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.validator.constraints.br.CNPJ;
@@ -41,6 +42,12 @@ public class Empresa {
         } else {
             this.taxaSistema = empresaDTO.taxaSistema();
         }
+    }
+
+    public Empresa(EmpresaUpdateDTO empresaUpdateDTO) {
+        this.nome = empresaUpdateDTO.nome();
+        this.email = empresaUpdateDTO.email();
+        this.taxaSistema = empresaUpdateDTO.taxaSistema();
     }
 
     @Override

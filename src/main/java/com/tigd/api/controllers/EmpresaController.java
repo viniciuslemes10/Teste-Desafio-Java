@@ -2,6 +2,7 @@ package com.tigd.api.controllers;
 
 import com.tigd.api.domain.Empresa;
 import com.tigd.api.dto.EmpresaDTO;
+import com.tigd.api.dto.EmpresaUpdateDTO;
 import com.tigd.api.service.EmpresaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +32,12 @@ public class EmpresaController {
         URI uri = uriComponentsBuilder.buildAndExpand(empresaSave).toUri();
 
         return ResponseEntity.created(uri).body(empresaSave);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Empresa> updateEmpresa(@RequestBody EmpresaUpdateDTO empresaUpdateDTO, @PathVariable Long id) {
+        Empresa empresa = new Empresa(empresaUpdateDTO);
+        Empresa update = service.update(empresa, id);
+        return ResponseEntity.ok(update);
     }
 }

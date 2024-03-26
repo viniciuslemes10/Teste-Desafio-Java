@@ -65,4 +65,21 @@ public class EmpresaService {
     public Optional<Empresa> findById(Long id) {
         return empresaRepository.findById(id);
     }
+
+    public Empresa update(Empresa empresa, Long id) {
+        Optional<Empresa> empresaById = empresaRepository.findById(id);
+        Empresa updateCompany = verifyNameAndEmailAndRateSystemNotNull(empresa, empresaById);
+        return empresaRepository.save(updateCompany);
+    }
+
+    private Empresa verifyNameAndEmailAndRateSystemNotNull(Empresa empresa, Optional<Empresa> empresaOptional) {
+        if(empresa.getNome() != null && !empresa.getNome().isEmpty()){
+            empresaOptional.get().setNome(empresa.getNome());
+        }if(empresa.getEmail() != null && !empresa.getEmail().isEmpty()){
+            empresaOptional.get().setEmail(empresa.getEmail());
+        }if(empresa.getTaxaSistema() != null){
+            empresaOptional.get().setTaxaSistema(empresa.getTaxaSistema());
+        }
+        return empresaOptional.get();
+    }
 }
