@@ -1,6 +1,7 @@
 package com.tigd.api.domain;
 
 import com.tigd.api.dto.ClienteDTO;
+import com.tigd.api.dto.ClienteUpdateDTO;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.validator.constraints.br.CPF;
@@ -34,6 +35,11 @@ public class Cliente {
         this.cpf = clienteDTO.cpf();
         this.email = clienteDTO.email();
         this.saldo = clienteDTO.saldo();
+    }
+
+    public Cliente(ClienteUpdateDTO clienteUpdateDTO) {
+        this.nome = clienteUpdateDTO.nome();
+        this.email = clienteUpdateDTO.email();
     }
 
     @Override

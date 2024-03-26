@@ -65,4 +65,24 @@ public class ClienteService {
     public Cliente atualizarSaldo(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
+
+    public Cliente updateClient(Cliente cliente, Long id) {
+        Optional<Cliente> clientById = findById(id);
+        Cliente clienteAtualizado = verifyNameAndEmailNotNull(cliente, clientById);
+        return update(clienteAtualizado);
+    }
+
+    private Cliente verifyNameAndEmailNotNull(Cliente cliente, Optional<Cliente> clienteOptional) {
+        if (cliente.getNome() != null && !cliente.getNome().isEmpty()) {
+            clienteOptional.get().setNome(cliente.getNome());
+        }
+        if ( cliente.getEmail() != null && !cliente.getEmail().isEmpty()) {
+            clienteOptional.get().setEmail(cliente.getEmail());
+        }
+        return clienteOptional.get();
+    }
+
+    private Cliente update(Cliente cliente) {
+        return clienteRepository.save(cliente);
+    }
 }
