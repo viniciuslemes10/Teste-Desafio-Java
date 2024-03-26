@@ -42,4 +42,16 @@ public class Empresa {
             this.taxaSistema = empresaDTO.taxaSistema();
         }
     }
+
+    @Override
+    public String toString() {
+        return "Empresa{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", cnpj='" + cnpj + '\'' +
+                ", email='" + email + '\'' +
+                ", saldo=" + saldo +
+                ", taxaSistema=" + taxaSistema +
+                '}';
+    }
 }
