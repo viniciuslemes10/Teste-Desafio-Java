@@ -3,6 +3,7 @@ package com.tigd.api.service;
 import com.tigd.api.domain.Empresa;
 import com.tigd.api.exceptions.CnpjUniqueException;
 import com.tigd.api.exceptions.EmailUniqueException;
+import com.tigd.api.exceptions.EmpresaNotFoundException;
 import com.tigd.api.repository.EmpresaRepository;
 import com.tigd.api.validators.DocumentValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +64,12 @@ public class EmpresaService {
     }
 
     public Optional<Empresa> findById(Long id) {
-        return empresaRepository.findById(id);
+        Optional<Empresa> empresa = empresaRepository.findById(id);
+        if(empresa.isPresent()) {
+            return empresa;
+        } else {
+            throw new EmpresaNotFoundException();
+        }
     }
 
     public Empresa update(Empresa empresa, Long id) {
@@ -81,5 +87,12 @@ public class EmpresaService {
             empresaOptional.get().setTaxaSistema(empresa.getTaxaSistema());
         }
         return empresaOptional.get();
+    }
+
+    public Empresa deleteByIdEmpresa(Optional<Empresa> empresaOpitinal) {
+        Empresa empresa = empresaOpitinal.get();
+        empresa.setAtivo(false);
+        empresaRepository.save(empresa);
+        return empresa;
     }
 }

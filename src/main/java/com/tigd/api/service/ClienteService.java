@@ -1,5 +1,6 @@
 package com.tigd.api.service;
 
+import com.tigd.api.exceptions.ClienteNotFoundException;
 import com.tigd.api.exceptions.CpfUniqueException;
 import com.tigd.api.exceptions.EmailUniqueException;
 import com.tigd.api.exceptions.CpfIllegalArgException;
@@ -59,7 +60,12 @@ public class ClienteService {
     }
 
     public Optional<Cliente> findById(Long id) {
-        return clienteRepository.findById(id);
+        Optional<Cliente> cliente = clienteRepository.findById(id);
+        if(cliente.isPresent()) {
+            return cliente;
+        } else {
+            throw new ClienteNotFoundException();
+        }
     }
 
     public Cliente atualizarSaldo(Cliente cliente) {
@@ -84,5 +90,12 @@ public class ClienteService {
 
     private Cliente update(Cliente cliente) {
         return clienteRepository.save(cliente);
+    }
+
+    public Cliente deleteClientById(Optional<Cliente> cliente) {
+        Cliente client = cliente.get();
+        client.setAtivo(false);
+        clienteRepository.save(client);
+        return client;
     }
 }
