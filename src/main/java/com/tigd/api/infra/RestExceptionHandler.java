@@ -50,4 +50,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.NOT_FOUND, exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restError);
     }
+
+    @ExceptionHandler(ClienteNotFoundException.class)
+    private ResponseEntity<RestErrorMenssage> clienteNotFoundException(ClienteNotFoundException exception) {
+        RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.NOT_FOUND, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restError);
+    }
+
+    @ExceptionHandler(EmpresaNotFoundException.class)
+    private ResponseEntity<RestErrorMenssage> empresaNotFoundException(EmpresaNotFoundException exception) {
+        RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.NOT_FOUND, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restError);
+    }
 }
