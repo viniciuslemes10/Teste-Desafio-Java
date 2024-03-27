@@ -5,12 +5,14 @@ import com.tigd.api.dto.EmpresaDTO;
 import com.tigd.api.dto.EmpresaUpdateDTO;
 import com.tigd.api.service.EmpresaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/empresas")
@@ -39,5 +41,12 @@ public class EmpresaController {
         Empresa empresa = new Empresa(empresaUpdateDTO);
         Empresa update = service.update(empresa, id);
         return ResponseEntity.ok(update);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Empresa> inactiveEmpresa(@PathVariable Long id) {
+        Optional<Empresa> empresaOpitinal = service.findById(id);
+        Empresa empresa = service.deleteByIdEmpresa(empresaOpitinal);
+        return ResponseEntity.noContent().build();
     }
 }

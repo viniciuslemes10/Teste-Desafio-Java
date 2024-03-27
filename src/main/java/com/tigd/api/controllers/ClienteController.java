@@ -6,12 +6,14 @@ import com.tigd.api.service.ClienteService;
 import com.tigd.api.domain.Cliente;
 import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/clientes")
@@ -38,5 +40,12 @@ public class ClienteController {
         Cliente cliente = new Cliente(clienteUpdateDTO);
         Cliente updateClient = service.updateClient(cliente, id);
         return ResponseEntity.ok(updateClient);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Cliente> inactiveClient(@PathVariable Long id) {
+        Optional<Cliente> cliente = service.findById(id);
+        Cliente clientInactive = service.deleteClientById(cliente);
+        return ResponseEntity.noContent().build();
     }
 }
