@@ -31,22 +31,25 @@ public class Empresa {
     private BigDecimal saldo;
     @Column(name = "taxa_sistema")
     private BigDecimal taxaSistema;
+    @Column(name = "ativo")
+    private boolean ativo;
 
     public Empresa(EmpresaDTO empresaDTO) {
-        this.nome = empresaDTO.nome();
-        this.cnpj = empresaDTO.cnpj();
-        this.email = empresaDTO.email();
+        this.nome = empresaDTO.nome().trim().replaceAll("\\s+", " ");
+        this.cnpj = empresaDTO.cnpj().trim().replaceAll("\\s+", "");
+        this.email = empresaDTO.email().trim().replaceAll("\\s+", "");
         this.saldo = empresaDTO.saldo();
         if (empresaDTO.taxaSistema() == null) {
             this.taxaSistema = BigDecimal.valueOf(0.01);
         } else {
             this.taxaSistema = empresaDTO.taxaSistema();
         }
+        this.ativo = true;
     }
 
     public Empresa(EmpresaUpdateDTO empresaUpdateDTO) {
-        this.nome = empresaUpdateDTO.nome();
-        this.email = empresaUpdateDTO.email();
+        this.nome = empresaUpdateDTO.nome().trim();
+        this.email = empresaUpdateDTO.email().trim();
         this.taxaSistema = empresaUpdateDTO.taxaSistema();
     }
 

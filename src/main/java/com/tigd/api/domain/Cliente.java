@@ -30,16 +30,20 @@ public class Cliente {
     @Column(name = "saldo")
     private BigDecimal saldo;
 
+    @Column(name = "ativo")
+    private boolean ativo;
+
     public Cliente(ClienteDTO clienteDTO) {
-        this.nome = clienteDTO.nome();
-        this.cpf = clienteDTO.cpf();
-        this.email = clienteDTO.email();
+        this.nome = clienteDTO.nome().trim().replaceAll("\\s+", " ");
+        this.cpf = clienteDTO.cpf().trim().replaceAll("\\s+", "");;
+        this.email = clienteDTO.email().trim().replaceAll("\\s+", "");;
         this.saldo = clienteDTO.saldo();
+        this.ativo = true;
     }
 
     public Cliente(ClienteUpdateDTO clienteUpdateDTO) {
-        this.nome = clienteUpdateDTO.nome();
-        this.email = clienteUpdateDTO.email();
+        this.nome = clienteUpdateDTO.nome().trim();
+        this.email = clienteUpdateDTO.email().trim();
     }
 
     @Override
