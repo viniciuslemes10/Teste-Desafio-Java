@@ -1,4 +1,4 @@
-package com.tigd.api.infra;
+package com.tigd.api.infra.exceptions;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
