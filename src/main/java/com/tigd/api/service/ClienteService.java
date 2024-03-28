@@ -140,7 +140,13 @@ public class ClienteService {
     private Cliente update(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
-
+    /**
+     * @param cliente cliente
+     * <p>Recebe como parâmetro um cliente Optional onde pode ou não vir.
+     * Transformando em um cliente da Classe Cliente, mundando o estado de ativo para false,
+     * salvando na base de dados.</p>
+     * @return cliente.
+     ***/
     public Cliente deleteClientById(Optional<Cliente> cliente) {
         Cliente client = cliente.get();
         client.setAtivo(false);
