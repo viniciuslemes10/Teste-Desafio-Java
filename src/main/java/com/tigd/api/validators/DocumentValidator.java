@@ -57,13 +57,19 @@ public class DocumentValidator implements Validator {
         if(documentTruncado.length() == 11 || documentTruncado.length() == 14) {
             return documentTruncado;
         } else {
-            if(contexto.equals("cliente")) {
+           throwExceptionAccordingToContext(contexto);
+        }
+        return documentTruncado;
+    }
+
+    private String throwExceptionAccordingToContext(String contexto) {
+        switch (contexto) {
+            case "cliente":
                 throw new CpfIllegalArgException();
-            } else if (contexto.equals("empresa")) {
+            case "empresa":
                 throw new CnpjIllegalArgException();
-            } else {
+            default:
                 throw new IllegalArgumentException();
-            }
         }
     }
 
