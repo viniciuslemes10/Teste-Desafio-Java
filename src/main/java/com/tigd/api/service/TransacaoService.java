@@ -36,18 +36,29 @@ public class TransacaoService {
      * Caso contrário lança uma exceção IlegalArgumentExcetion.
      * @param transacao a transação a ser verificada.
      * @return a transação se for do tipo 'S'(saque) ou 'D' (depósito).
-     * @throws IllegalArgumentException se o tipo de transação não for 'S' ou 'D'.
      **/
     private Transacao verificarTipo(Transacao transacao) {
-        char tipo = transacao.getTipo();
-        if(tipo == 'D' || tipo == 'd') {
-            return transacao;
-        } else if (tipo == 'S' || tipo == 's') {
-            return transacao;
-        } else {
-            throw new IllegalArgumentException("Tipo inválido");
+        Character tipo = transacao.getTipo();
+        Character.toUpperCase(tipo);
+        return getTransacaoDepositoSaqueValidada(transacao, tipo);
+    }
+
+    /**
+     * Caso o tipo seja 'D' (depositar) || 'S' (sacar) é válido.<br>
+     * @param transacao A transação que será retornado se for válido.
+     * @param tipo O tipo de transação que será verificado.
+     * @return transacao se o tipo for válido, caso contrário ele lança exceção.<br>
+     * @throws IllegalArgumentException se o tipo de transação não for 'S' ou 'D'.
+     **/
+    private Transacao getTransacaoDepositoSaqueValidada(Transacao transacao, Character tipo) {
+        switch (tipo) {
+            case 'D', 'S':
+                return transacao;
+            default:
+                throw new IllegalArgumentException("Tipo de transação inválido: " + tipo);
         }
     }
+
     /**
      * Salva a nova transação realizada na base de dados.
      * @param transacao a transação que será salva.
@@ -79,8 +90,10 @@ public class TransacaoService {
         switch (tipoVerificado.getTipo()){
             case 'D':
                 processarDebito(cliente, empresa, valorTransacao, taxaSistema);
+                break;
             case 'S':
                 processarSaque(cliente, empresa, valorTransacao, taxaSistema);
+                break;
         }
 
         save(transacao);
@@ -106,8 +119,6 @@ public class TransacaoService {
     private BigDecimal obterTaxaSistema(Empresa empresa) {
         return empresa.getTaxaSistema();
     }
-
-
 
     /**
      * Localiza uma empresa com base no ID fornecido, verificando se é válida.
@@ -172,15 +183,14 @@ public class TransacaoService {
      * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
      */
     private void processarDebito(Cliente cliente, Empresa empresa, BigDecimal valorTransacao, BigDecimal taxaSistema) {
-        BigDecimal valorComTaxa = valorTransacao.subtract(valorTransacao.multiply(taxaSistema));
-        BigDecimal novoSaldo = empresa.getSaldo().add(valorComTaxa);
         verificarSaldoSuficiente(cliente.getSaldo(), valorTransacao);
-
-        cliente.setSaldo(cliente.getSaldo().subtract(valorTransacao));
+        BigDecimal valorComTaxa = valorTransacao.subtract(valorTransacao.multiply(taxaSistema));
+        BigDecimal novoSaldo = empresa.getSaldo().add(valorTransacao);
         empresa.setSaldo(novoSaldo);
-
+        cliente.setSaldo(cliente.getSaldo().subtract(valorComTaxa));
         atualizaSaldoClienteEmpresa(empresa, cliente);
     }
+
     /**
      * Atualiza o saldo do cliente e da empresa salvando na base de dados.
      * @param cliente O cliente associado a transação.
