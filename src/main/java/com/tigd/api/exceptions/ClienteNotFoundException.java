@@ -2,7 +2,7 @@ package com.tigd.api.exceptions;
 
 import java.util.NoSuchElementException;
 /**
- * @author viniciuslemes10, gemeoslemes
+ * @author viniciuslemes10, gemeoslemes<br>
  * Exceção lançada quando cliente não pode ser encontrado.
  **/
 public class ClienteNotFoundException extends NoSuchElementException {
