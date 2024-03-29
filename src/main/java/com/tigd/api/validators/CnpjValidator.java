@@ -11,15 +11,15 @@ public class CnpjValidator extends CpfValidator {
         return compararDigitoVerificador(result, 13, typeDocument);
     }
     protected boolean validarCNPJPrimeiroDigito(String typeDocument) {
-        int soma = calcularSomaCNPJ(typeDocument, 11);
-        return compararDigitoVerificador(soma, 12, typeDocument);
+        int result = calcularSomaCNPJ(typeDocument, 11);
+        return compararDigitoVerificador(result, 12, typeDocument);
     }
 
     private int calcularSomaCNPJ(String document, int tamanhoDoIndice) {
-        return percorrendoDocumento(document, tamanhoDoIndice);
+        return somarValoresDocumento(document, tamanhoDoIndice);
     }
 
-    protected int percorrendoDocumento(String typeDocument, int tamanhoIndice) {
+    protected int somarValoresDocumento(String typeDocument, int tamanhoIndice) {
         int sum = 0;
         int peso = 2;
         for (int i = tamanhoIndice; i >= 0; i--) {

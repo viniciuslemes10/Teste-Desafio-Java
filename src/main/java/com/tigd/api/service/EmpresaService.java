@@ -66,7 +66,6 @@ public class EmpresaService {
      **/
     private void isPresentCnpj(Empresa empresa) {
         boolean empresas = findByCnpj(empresa);
-
         if (empresas) {
             throw new CnpjUniqueException();
         }
@@ -94,7 +93,6 @@ public class EmpresaService {
      **/
     private void isPresentEmail(Empresa empresa) {
         boolean empresaEmail = findByEmail(empresa);
-
         if(empresaEmail) {
             throw new EmailUniqueException();
         }
