@@ -23,67 +23,34 @@ public class DocumentValidator implements Validator {
     @Override
     public String isValid(String document, String contexto) {
         String typeDocument = documentTruncado(document, contexto);
-        if(typeDocument.length() == 11 && contexto.equals("cliente")) {
-            validarCpf(typeDocument);
-            return typeDocument;
-        } else if(typeDocument.length() == 14 && contexto.equals("empresa")) {
-            validarCnpj(typeDocument);
+        if((contexto.equals("cliente") && isCPF(typeDocument)) || (contexto.equals("empresa") && isCNPJ(typeDocument))) {
             return typeDocument;
         }
         return typeDocument;
     }
 
+    private boolean isCNPJ(String document) {
+        return document.length() == 14 && validarCnpj(document);
+    }
+
+    private boolean isCPF(String document) {
+        return document.length() == 11 && validarCpf(document);
+    }
+
     private boolean validarCnpj(String typeDocument) {
-        boolean digitosIguais = true;
-        digitosIguais = cpfValidator.isDigitosIguais(typeDocument, digitosIguais);
-
-        if(digitosIguais) {
-            throw new CnpjIllegalArgException();
-        }
-
-        int sum = 0;
-        int peso = 2;
-        sum = cnpjValidator.percorrendoDocumento(typeDocument, sum, peso, 11);
-
-        int dac1 = cnpjValidator.calcularDac(sum);
-
-        sum = 0;
-        peso = 2;
-        sum = cnpjValidator.percorrendoDocumento(typeDocument, sum, peso, 12);
-        int dac2 = cnpjValidator.calcularDac(sum);
-
-        boolean primeiroDigito = cnpjValidator.validarDigito(dac1, 12, typeDocument);
-        boolean segundoDigito = cnpjValidator.validarDigito(dac2, 13, typeDocument);
-
-        if(primeiroDigito && segundoDigito) {
-            return true;
-        } else {
-            throw new CnpjIllegalArgException();
-        }
+        cnpjValidator.isDigitosIguais(typeDocument);
+        boolean primeiroDigito = cnpjValidator.validarCNPJPrimeiroDigito(typeDocument);
+        boolean segundoDigito = cnpjValidator.validarCNPJSegundoDigito(typeDocument);
+        return cnpjValidator.confirmarCnpjDacs(primeiroDigito, segundoDigito);
     }
 
     private boolean validarCpf(String typeDocument) {
-        boolean digitosIguais = true;
-        digitosIguais = cpfValidator.isDigitosIguais(typeDocument, digitosIguais);
-
-        if(digitosIguais) {
-            throw new CpfIllegalArgException();
-        }
-
-        int sum = 0;
-        sum = cpfValidator.percorrendoDocumento(typeDocument, sum, 9, 10);
-        boolean primeiroDigito = cpfValidator.validarDigitos(sum, typeDocument, 9);
-
-        sum = 0;
-        sum = cpfValidator.percorrendoDocumento(typeDocument, sum, 10, 11);
-        boolean segundoDigito = cpfValidator.validarDigitos(sum, typeDocument, 10);
-
-        if(primeiroDigito && segundoDigito) {
-            return true;
-        } else {
-            throw new CpfIllegalArgException();
-        }
+        cpfValidator.isDigitosIguais(typeDocument);
+        boolean primeiroDigito = cpfValidator.validarDigitoVerificadorCpf(typeDocument, 9, 10);
+        boolean segundoDigito = cpfValidator.validarDigitoVerificadorCpf(typeDocument, 10, 11);
+        return cpfValidator.validarDacCpf(primeiroDigito, segundoDigito);
     }
+
 
     private String documentTruncado(String document, String contexto) {
         documentTruncado = lengthDoc(document);

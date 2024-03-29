@@ -1,50 +1,62 @@
 package com.tigd.api.validators;
 
+import com.tigd.api.exceptions.CpfIllegalArgException;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CpfValidator {
-    protected boolean cpfIllegalArgumento(String typeDocument, int posicaoIndice, int digtoverificador) {
-        if(Character.getNumericValue(typeDocument.charAt(posicaoIndice)) == digtoverificador) {
+    protected boolean validarDigitoVerificadorCpf(String typeDocument, int indiceSoma, int indiceDigito) {
+        int sum = 0;
+        sum = calcularSomaPonderada(typeDocument, sum, indiceSoma, indiceDigito);
+        return validarDigitoVerificadorCpfPorIndice(sum, typeDocument, indiceSoma);
+    }
+
+    protected boolean validarDacCpf(boolean dacOne, boolean dacTwo) {
+        if(dacOne && dacTwo) {
             return true;
         } else {
-            return false;
+            throw new CpfIllegalArgException();
         }
     }
 
-    private int resto(int sum) {
-        return 11 - (sum % 11);
+    protected void isDigitosIguais(String document) {
+        if (areTheSameDigits(document)) {
+            throw new CpfIllegalArgException();
+        }
     }
 
-    protected int percorrendoDocumento(String typeDocument, int sum, int tamanhoDoFor, int posicaoDigito) {
+    private boolean validarDigitoVerificadorCpfPorIndice(int sum, String typeDocument, int posicaoDigitoValidacao) {
+        int digitoCalculado = calcularDigitoVerificador(sum);
+        return Character.getNumericValue(typeDocument.charAt(posicaoDigitoValidacao)) == digitoCalculado;
+    }
+
+    private int calcularDigitoVerificador(int sum) {
+        int resto = 11 - (sum % 11);
+        if(resto > 9) {
+            return 0;
+        }
+        return resto;
+    }
+
+    private int calcularSomaPonderada(String typeDocument, int sum, int tamanhoDoFor, int indice) {
         for(int i = 0; i < tamanhoDoFor; i++) {
-            sum += Character.getNumericValue(typeDocument.charAt(i)) * (posicaoDigito-i);
+            sum += Character.getNumericValue(typeDocument.charAt(i)) * (indice-i);
         }
         return sum;
     }
 
-    private int digitoMaiorQueNove(int digitoVericado) {
-        if(digitoVericado > 9) {
-            digitoVericado = 0;
-        }
-        return digitoVericado;
+    private boolean areTheSameDigits(String typeDocument) {
+        char primeiroDigito = typeDocument.charAt(0);
+        return percorrendoDocumento(typeDocument, primeiroDigito);
     }
 
-    protected boolean isDigitosIguais(String typeDocument, boolean digitosIguais) {
-        char primeiroDigito = typeDocument.charAt(0);
-        for (int i = 0; i < typeDocument.length(); i++) {
-            if(typeDocument.charAt(i) != primeiroDigito) {
-                digitosIguais = false;
-                break;
+    private boolean percorrendoDocumento(String document, char digito) {
+        for (int i = 1; i < document.length(); i++) {
+            if (document.charAt(i) != digito) {
+                return false;
             }
         }
-        return digitosIguais;
+        return true;
     }
 
-    protected boolean validarDigitos(int sum, String typeDocument, int indice) {
-        int digitoVerificado = resto(sum);
-        digitoVerificado = digitoMaiorQueNove(digitoVerificado);
-        boolean digito = cpfIllegalArgumento(typeDocument, indice, digitoVerificado);
-        return digito;
-    }
 }
