@@ -6,9 +6,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class CnpjValidator extends CpfValidator {
 
-    protected boolean validar(String typeDocument, int indice, int posicao) {
-        int soma = percorrendoDocumento(typeDocument, indice);
-        return validarDigito(soma, posicao, typeDocument);
+    protected boolean validarCNPJSegundoDigito(String typeDocument) {
+        int result = calcularSomaCNPJ(typeDocument, 12);
+        return compararDigitoVerificador(result, 13, typeDocument);
+    }
+    protected boolean validarCNPJPrimeiroDigito(String typeDocument) {
+        int soma = calcularSomaCNPJ(typeDocument, 11);
+        return compararDigitoVerificador(soma, 12, typeDocument);
+    }
+
+    private int calcularSomaCNPJ(String document, int tamanhoDoIndice) {
+        return percorrendoDocumento(document, tamanhoDoIndice);
     }
 
     protected int percorrendoDocumento(String typeDocument, int tamanhoIndice) {
@@ -24,18 +32,18 @@ public class CnpjValidator extends CpfValidator {
         return sum;
     }
 
-    protected boolean validarDigito(int sum, int posicao, String typeDocument) {
-        int digito = Character.getNumericValue(typeDocument.charAt(posicao));
-        return calcularDac(sum) == digito;
+    protected boolean compararDigitoVerificador(int resultadoDaSoma, int posicao, String document) {
+        int digito = Character.getNumericValue(document.charAt(posicao));
+        return calcularDacDeVerificação(resultadoDaSoma) == digito;
     }
 
-    private int calcularDac(int sum) {
+    private int calcularDacDeVerificação(int sum) {
         int resto = sum % 11;
         int dac = (resto < 2) ? 0 : (11 - resto);
         return dac;
     }
 
-    public boolean validarDacCnpj(boolean dacOne, boolean dacTwo) {
+    public boolean confirmarCnpjDacs(boolean dacOne, boolean dacTwo) {
         if (dacOne && dacTwo) {
             return true;
         } else {

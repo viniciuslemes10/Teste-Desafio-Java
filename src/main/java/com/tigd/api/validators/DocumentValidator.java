@@ -39,9 +39,9 @@ public class DocumentValidator implements Validator {
 
     private boolean validarCnpj(String typeDocument) {
         cnpjValidator.isDigitosIguais(typeDocument);
-        boolean primeiroDigito = cnpjValidator.validar(typeDocument, 11, 12);
-        boolean segundoDigito = cnpjValidator.validar(typeDocument, 12, 13);
-        return cnpjValidator.validarDacCnpj(primeiroDigito, segundoDigito);
+        boolean primeiroDigito = cnpjValidator.validarCNPJPrimeiroDigito(typeDocument);
+        boolean segundoDigito = cnpjValidator.validarCNPJSegundoDigito(typeDocument);
+        return cnpjValidator.confirmarCnpjDacs(primeiroDigito, segundoDigito);
     }
 
     private boolean validarCpf(String typeDocument) {
