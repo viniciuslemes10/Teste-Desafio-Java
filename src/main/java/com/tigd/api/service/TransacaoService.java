@@ -63,7 +63,7 @@ public class TransacaoService {
      * Os métodos {@link #findByCompany} e {@link #findbyClient} buscam o cliente e a empresa
      * que seram atualizado os saldos.
      * Outros métodos para realizar a transação são: ({@link #obterValorTransacao},
-     * {@link #obterTaxaSistema}). {@link #verificarTipoTransacao}(De acordo com o tipo se por passado como
+     * {@link #obterTaxaSistema}). {@link #verificarTipo} De acordo com o tipo se por passado como
      * 'S' (saque) será executado o método {@link #processarSaque}, caso for do tipo 'D' (depósito)
      * será executado o método {@link #processarDebito}).
      * @return Salva na base de dados, mostrando a transação processada.
@@ -74,7 +74,7 @@ public class TransacaoService {
 
         BigDecimal valorTransacao = obterValorTransacao(transacao);
         BigDecimal taxaSistema = obterTaxaSistema(empresa);
-        Transacao tipoVerificado = verificarTipoTransacao(transacao);
+        Transacao tipoVerificado = verificarTipo(transacao);
 
         switch (tipoVerificado.getTipo()){
             case 'D':
@@ -107,15 +107,7 @@ public class TransacaoService {
         return empresa.getTaxaSistema();
     }
 
-    /**
-     * Verifica o tipo da transação.
-     *
-     * @param transacao A transação cujo tipo deseja-se verificar.
-     * @return O objeto Transacao com o tipo verificado.
-     */
-    private Transacao verificarTipoTransacao(Transacao transacao) {
-        return verificarTipo(transacao);
-    }
+
 
     /**
      * Localiza uma empresa com base no ID fornecido, verificando se é válida.
