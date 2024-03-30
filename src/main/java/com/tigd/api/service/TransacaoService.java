@@ -80,24 +80,61 @@ public class TransacaoService {
      * @return Salva na base de dados, mostrando a transação processada.
      **/
     public Transacao processarTransacao(Transacao transacao) {
+        Transacao tipoVerificado = verificarTipo(transacao);
+        processarTipoEspecifico(tipoVerificado);
+        save(transacao);
+        return transacao;
+    }
+
+    private void processarTipoEspecifico(Transacao transacao) {
+        switch (transacao.getTipo()){
+            case 'D':
+                processarDebito(transacao);
+                break;
+            case 'S':
+                processarSaque(transacao);
+                break;
+        }
+    }
+
+    /**
+     * Processa uma transação de débito, atualizando os saldos do cliente e da empresa.
+     * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
+     */
+    private void processarDebito(Transacao transacao) {
         Empresa empresa = findByCompany(transacao.getEmpresa().getId());
         Cliente cliente = findbyClient(transacao.getCliente().getId());
 
         BigDecimal valorTransacao = obterValorTransacao(transacao);
         BigDecimal taxaSistema = obterTaxaSistema(empresa);
-        Transacao tipoVerificado = verificarTipo(transacao);
 
-        switch (tipoVerificado.getTipo()){
-            case 'D':
-                processarDebito(cliente, empresa, valorTransacao, taxaSistema);
-                break;
-            case 'S':
-                processarSaque(cliente, empresa, valorTransacao, taxaSistema);
-                break;
-        }
+        verificarSaldoSuficiente(cliente.getSaldo(), valorTransacao);
+        BigDecimal valorComTaxa = valorTransacao.subtract(valorTransacao.multiply(taxaSistema));
+        BigDecimal novoSaldo = empresa.getSaldo().add(valorTransacao);
 
-        save(transacao);
-        return transacao;
+        empresa.setSaldo(novoSaldo);
+        cliente.setSaldo(cliente.getSaldo().subtract(valorComTaxa));
+        atualizaSaldoClienteEmpresa(empresa, cliente);
+    }
+
+    /**
+     * Processa uma transação de Saque, atualizando os saldos do cliente e da empresa.
+     * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
+     */
+    private void processarSaque(Transacao transacao) {
+        Empresa empresa = findByCompany(transacao.getEmpresa().getId());
+        Cliente cliente = findbyClient(transacao.getCliente().getId());
+        BigDecimal valorTransacao = obterValorTransacao(transacao);
+        BigDecimal taxaSistema = obterTaxaSistema(empresa);
+
+        BigDecimal valorComTaxa = valorTransacao.add(valorTransacao.multiply(taxaSistema));
+        verificarSaldoSuficiente(empresa.getSaldo(), valorComTaxa);
+
+        BigDecimal novoValorSaldoEmpresa = empresa.getSaldo().subtract(valorComTaxa);
+        empresa.setSaldo(novoValorSaldoEmpresa);
+        cliente.setSaldo(cliente.getSaldo().add(valorTransacao));
+
+        atualizaSaldoClienteEmpresa(empresa, cliente);
     }
 
     /**
@@ -153,43 +190,7 @@ public class TransacaoService {
         return optional.orElseThrow(ElementNotFoundException::new);
     }
 
-    /**
-     * Processa uma transação de Saque, atualizando os saldos do cliente e da empresa.
-     *
-     * @param cliente O cliente associado à transação de débito.
-     * @param empresa A empresa associada à transação de débito.
-     * @param valorTransacao O valor da transação de débito.
-     * @param taxaSistema A taxa do sistema aplicada à transação de débito.
-     * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
-     */
-    private void processarSaque(Cliente cliente, Empresa empresa, BigDecimal valorTransacao, BigDecimal taxaSistema) {
-        BigDecimal valorComTaxa = valorTransacao.add(valorTransacao.multiply(taxaSistema));
-        verificarSaldoSuficiente(empresa.getSaldo(), valorComTaxa);
 
-        BigDecimal novoValorSaldoEmpresa = empresa.getSaldo().subtract(valorComTaxa);
-        empresa.setSaldo(novoValorSaldoEmpresa);
-        cliente.setSaldo(cliente.getSaldo().add(valorTransacao));
-
-        atualizaSaldoClienteEmpresa(empresa, cliente);
-    }
-
-    /**
-     * Processa uma transação de débito, atualizando os saldos do cliente e da empresa.
-     *
-     * @param cliente O cliente associado à transação de débito.
-     * @param empresa A empresa associada à transação de débito.
-     * @param valorTransacao O valor da transação de débito.
-     * @param taxaSistema A taxa do sistema aplicada à transação de débito.
-     * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
-     */
-    private void processarDebito(Cliente cliente, Empresa empresa, BigDecimal valorTransacao, BigDecimal taxaSistema) {
-        verificarSaldoSuficiente(cliente.getSaldo(), valorTransacao);
-        BigDecimal valorComTaxa = valorTransacao.subtract(valorTransacao.multiply(taxaSistema));
-        BigDecimal novoSaldo = empresa.getSaldo().add(valorTransacao);
-        empresa.setSaldo(novoSaldo);
-        cliente.setSaldo(cliente.getSaldo().subtract(valorComTaxa));
-        atualizaSaldoClienteEmpresa(empresa, cliente);
-    }
 
     /**
      * Atualiza o saldo do cliente e da empresa salvando na base de dados.
