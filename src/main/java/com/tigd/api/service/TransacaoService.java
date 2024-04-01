@@ -120,6 +120,11 @@ public class TransacaoService {
         return empresa.getTaxaSistema();
     }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 17725f1b34bdfb437b5ff018478f3f417f5f9eef
     /**
      * Localiza uma empresa com base no ID fornecido, verificando se é válida.
      *
