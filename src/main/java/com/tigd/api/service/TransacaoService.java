@@ -6,19 +6,21 @@ import com.tigd.api.domain.Transacao;
 import com.tigd.api.exceptions.ElementNotFoundException;
 import com.tigd.api.exceptions.SaldoNegativoException;
 import com.tigd.api.repository.TransacaoRepository;
+import com.tigd.api.validators.TransacaoBancaria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
 /**
  * @author gemeoslemes viniciuslemes10<br>
  * A classe TransacaoService fornece funcionalidades relacionada as transações entre empresas e clientes.
  * Ela permite registar novas transações, listar todas as transações já realizadas.
  * Está classe depende das classes {@link ClienteService}, {@link EmpresaService} e {@link TransacaoRepository}
- *para acessar e persistir informações de empresa e cliente.
- * **/
+ * para acessar e persistir informações de empresa e cliente.
+ **/
 @Service
 public class TransacaoService {
 
@@ -34,23 +36,24 @@ public class TransacaoService {
     /**
      * Verifica o tipo de transação que será realizada 'S' (saque) ou 'D' (depósito).
      * Caso contrário lança uma exceção IlegalArgumentExcetion.
+     *
      * @param transacao a transação a ser verificada.
      * @return a transação se for do tipo 'S'(saque) ou 'D' (depósito).
      **/
-    private Transacao verificarTipo(Transacao transacao) {
-        Character tipo = transacao.getTipo();
-        Character.toUpperCase(tipo);
-        return getTransacaoDepositoSaqueValidada(transacao, tipo);
+    private Transacao validarTipoTransacao(Transacao transacao) {
+        Character tipo = Character.toUpperCase(transacao.getTipo());
+        return obterTransacaoDepositoOuSaqueValidada(transacao, tipo);
     }
 
     /**
      * Caso o tipo seja 'D' (depositar) || 'S' (sacar) é válido.<br>
+     *
      * @param transacao A transação que será retornado se for válido.
-     * @param tipo O tipo de transação que será verificado.
+     * @param tipo      O tipo de transação que será verificado.
      * @return transacao se o tipo for válido, caso contrário ele lança exceção.<br>
      * @throws IllegalArgumentException se o tipo de transação não for 'S' ou 'D'.
      **/
-    private Transacao getTransacaoDepositoSaqueValidada(Transacao transacao, Character tipo) {
+    private Transacao obterTransacaoDepositoOuSaqueValidada(Transacao transacao, Character tipo) {
         switch (tipo) {
             case 'D', 'S':
                 return transacao;
@@ -61,6 +64,7 @@ public class TransacaoService {
 
     /**
      * Salva a nova transação realizada na base de dados.
+     *
      * @param transacao a transação que será salva.
      * @return A transação salvada.
      **/
@@ -70,71 +74,63 @@ public class TransacaoService {
 
     /**
      * Processa uma Transação e atualiza os saldos do cliente e empresa.
+     *
      * @param transacao Transação que será processada. <br>
-     * Os métodos {@link #findByCompany} e {@link #findbyClient} buscam o cliente e a empresa
-     * que seram atualizado os saldos.
-     * Outros métodos para realizar a transação são: ({@link #obterValorTransacao},
-     * {@link #obterTaxaSistema}). {@link #verificarTipo} De acordo com o tipo se por passado como
-     * 'S' (saque) será executado o método {@link #processarSaque}, caso for do tipo 'D' (depósito)
-     * será executado o método {@link #processarDebito}).
+     *                  Os métodos {@link #findByCompany} e {@link #findbyClient} buscam o cliente e a empresa
+     *                  que seram atualizado os saldos.
+     *                  Outros métodos para realizar a transação são: ({@link #obterValorTransacao},
+     *                  {@link #obterTaxaSistema}). {@link #validarTipoTransacao} De acordo com o tipo se por passado como
+     *                  'S' (saque) será executado o método {@link #processarTransacao}, caso for do tipo 'D' (depósito)
+     *                  será executado o método {@link #processarTransacao}).
      * @return Salva na base de dados, mostrando a transação processada.
      **/
     public Transacao processarTransacao(Transacao transacao) {
-        Transacao tipoVerificado = verificarTipo(transacao);
+        Transacao tipoVerificado = validarTipoTransacao(transacao);
         processarTipoEspecifico(tipoVerificado);
         save(transacao);
         return transacao;
     }
 
     private void processarTipoEspecifico(Transacao transacao) {
-        switch (transacao.getTipo()){
+        switch (transacao.getTipo()) {
             case 'D':
-                processarDebito(transacao);
+                processarTransacao(transacao, true);
                 break;
             case 'S':
-                processarSaque(transacao);
+                processarTransacao(transacao, false);
                 break;
         }
     }
 
-    /**
-     * Processa uma transação de débito, atualizando os saldos do cliente e da empresa.
-     * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
-     */
-    private void processarDebito(Transacao transacao) {
-        Empresa empresa = findByCompany(transacao.getEmpresa().getId());
-        Cliente cliente = findbyClient(transacao.getCliente().getId());
+    private void processarTransacao(Transacao transacao, boolean isDebito) {
+        Empresa empresa = encontrarEmpresa(transacao);
+        Cliente cliente = encontrarCliente(transacao);
 
         BigDecimal valorTransacao = obterValorTransacao(transacao);
         BigDecimal taxaSistema = obterTaxaSistema(empresa);
+        BigDecimal valorComTaxa;
 
-        verificarSaldoSuficiente(cliente.getSaldo(), valorTransacao);
-        BigDecimal valorComTaxa = valorTransacao.subtract(valorTransacao.multiply(taxaSistema));
-        BigDecimal novoSaldo = empresa.getSaldo().add(valorTransacao);
+        if (isDebito) {
+            verificarSaldoSuficiente(cliente.getSaldo(), valorTransacao);
+            valorComTaxa = calcularValorComTaxa(valorTransacao, taxaSistema);
+        } else {
+            valorComTaxa = calcularValorComTaxa(valorTransacao, taxaSistema);
+            verificarSaldoSuficiente(empresa.getSaldo(), valorComTaxa);
+        }
 
-        empresa.setSaldo(novoSaldo);
-        cliente.setSaldo(cliente.getSaldo().subtract(valorComTaxa));
-        atualizaSaldoClienteEmpresa(empresa, cliente);
+        TransacaoBancaria operacao = new TransacaoBancaria(empresa, cliente, valorTransacao, valorComTaxa);
+
+        executarTransacaoComBaseNoTipo(operacao, isDebito);
+
+        atualizaSaldoClienteEmpresa(operacao.getEmpresa(), operacao.getCliente());
     }
 
-    /**
-     * Processa uma transação de Saque, atualizando os saldos do cliente e da empresa.
-     * @exception SaldoNegativoException Se o saldo do cliente for insuficiente para a transação.
-     */
-    private void processarSaque(Transacao transacao) {
-        Empresa empresa = findByCompany(transacao.getEmpresa().getId());
-        Cliente cliente = findbyClient(transacao.getCliente().getId());
-        BigDecimal valorTransacao = obterValorTransacao(transacao);
-        BigDecimal taxaSistema = obterTaxaSistema(empresa);
+    private Empresa encontrarEmpresa(Transacao transacao) {
+        return findByCompany(transacao.getEmpresa().getId());
+    }
 
-        BigDecimal valorComTaxa = valorTransacao.add(valorTransacao.multiply(taxaSistema));
-        verificarSaldoSuficiente(empresa.getSaldo(), valorComTaxa);
-
-        BigDecimal novoValorSaldoEmpresa = empresa.getSaldo().subtract(valorComTaxa);
-        empresa.setSaldo(novoValorSaldoEmpresa);
-        cliente.setSaldo(cliente.getSaldo().add(valorTransacao));
-
-        atualizaSaldoClienteEmpresa(empresa, cliente);
+    private Cliente encontrarCliente(Transacao transacao) {
+        return findbyClient(transacao.getCliente().getId());
     }
 
     /**
@@ -158,13 +154,54 @@ public class TransacaoService {
     }
 
     /**
+     * Verifica se o saldo é suficiente para realizar a transação com o valor passado.
+     *
+     * @param valorTransacao valor que é passado na transação.
+     * @param saldo          O saldo que o cliente ou a empresa tem na base de dados.
+     * @throws SaldoNegativoException caso saldo seja menor que o valor passado, a exception é passada
+     *                                com a mensagem e seu status.
+     **/
+    private void verificarSaldoSuficiente(BigDecimal saldo, BigDecimal valorTransacao) {
+        if (saldo.compareTo(valorTransacao) < 0) {
+            throw new SaldoNegativoException();
+        }
+    }
+
+    private BigDecimal calcularValorComTaxa(BigDecimal valorTransacao, BigDecimal taxaSistema) {
+        return valorTransacao.add(valorTransacao.multiply(taxaSistema));
+    }
+
+    private void executarTransacaoComBaseNoTipo(TransacaoBancaria transacaoBancaria, boolean isDebito) {
+        if (isDebito) {
+            realizarTransacaoDeDebito(transacaoBancaria);
+        } else {
+            realizarTransacaoDeSaque(transacaoBancaria);
+        }
+    }
+
+    private void realizarTransacaoDeSaque(TransacaoBancaria operacao) {
+        BigDecimal valorASePagar = calculandoValorTotalSacado(operacao.getEmpresa(), operacao.getValorComTaxa());
+        operacao.getEmpresa().setSaldo(valorASePagar);
+        operacao.getCliente().setSaldo(operacao.getCliente().getSaldo().add(operacao.getValorTransacao()));
+    }
+
+    private BigDecimal calculandoValorTotalSacado(Empresa empresaPagadora, BigDecimal valorComTaxa) {
+        return empresaPagadora.getSaldo().subtract(valorComTaxa);
+    }
+
+    private void realizarTransacaoDeDebito(TransacaoBancaria operacao) {
+        operacao.getEmpresa().setSaldo(operacao.getEmpresa().getSaldo().add(operacao.getValorTransacao()));
+        operacao.getCliente().setSaldo(operacao.getCliente().getSaldo().subtract(operacao.getValorComTaxa()));
+    }
+
+    /**
      * Localiza uma empresa com base no ID fornecido, verificando se é válida.
      *
      * @param empresaId O ID da empresa a ser localizada.
      * @return A empresa encontrada, ou null se não for encontrada ou não for válida.
      */
     private Empresa findByCompany(Long empresaId) {
-        return findValidClientOrCompany(empresaService.findById(empresaId));
+        return encontrarClienteOuEmpresaValido(empresaService.findById(empresaId));
     }
 
     /**
@@ -174,45 +211,30 @@ public class TransacaoService {
      * @return O cliente encontrado, ou null se não for encontrado ou não for válido.
      */
     private Cliente findbyClient(Long clienteId) {
-        return findValidClientOrCompany(clienteService.findById(clienteId));
+        return encontrarClienteOuEmpresaValido(clienteService.findById(clienteId));
     }
-
 
     /**
      * Retorna o valor contido em um Optional, lançando uma exceção se o valor estiver ausente.
      *
      * @param optional O Optional do qual deseja-se obter o valor.
-     * @param <T> O tipo do valor contido no Optional.
+     * @param <T>      O tipo do valor contido no Optional.
      * @return O valor contido no Optional.
      * @throws ElementNotFoundException Se o Optional estiver vazio.
      */
-    private <T> T findValidClientOrCompany(Optional<T> optional) {
+    private <T> T encontrarClienteOuEmpresaValido(Optional<T> optional) {
         return optional.orElseThrow(ElementNotFoundException::new);
     }
 
-
-
     /**
      * Atualiza o saldo do cliente e da empresa salvando na base de dados.
+     *
      * @param cliente O cliente associado a transação.
      * @param empresa A empresa associada a transação.
      **/
     private void atualizaSaldoClienteEmpresa(Empresa empresa, Cliente cliente) {
         clienteService.atualizarSaldo(cliente);
         empresaService.atualizarSaldo(empresa);
-    }
-
-    /**
-     * Verifica se o saldo é suficiente para realizar a transação com o valor passado.
-     * @param valorTransacao valor que é passado na transação.
-     * @param saldo O saldo que o cliente ou a empresa tem na base de dados.
-     * @exception SaldoNegativoException caso saldo seja menor que o valor passado, a exception é passada
-     * com a mensagem e seu status.
-     **/
-    private void verificarSaldoSuficiente(BigDecimal saldo, BigDecimal valorTransacao) {
-        if (saldo.compareTo(valorTransacao) < 0) {
-            throw new SaldoNegativoException();
-        }
     }
 
     /**
