@@ -179,19 +179,19 @@ public class TransacaoService {
         }
     }
 
-    private void realizarTransacaoDeSaque(TransacaoBancaria operacao) {
-        BigDecimal valorASePagar = calculandoValorTotalSacado(operacao.getEmpresa(), operacao.getValorComTaxa());
-        operacao.getEmpresa().setSaldo(valorASePagar);
-        operacao.getCliente().setSaldo(operacao.getCliente().getSaldo().add(operacao.getValorTransacao()));
+    private void realizarTransacaoDeSaque(TransacaoBancaria operacaoDeSaque) {
+        BigDecimal valorASePagar = calculandoValorTotalSacado(operacaoDeSaque.getEmpresa(), operacaoDeSaque.getValorComTaxa());
+        operacaoDeSaque.getEmpresa().setSaldo(valorASePagar);
+        operacaoDeSaque.getCliente().setSaldo(operacaoDeSaque.getCliente().getSaldo().add(operacaoDeSaque.getValorTransacao()));
     }
 
     private BigDecimal calculandoValorTotalSacado(Empresa empresaPagadora, BigDecimal valorComTaxa) {
         return empresaPagadora.getSaldo().subtract(valorComTaxa);
     }
 
-    private void realizarTransacaoDeDebito(TransacaoBancaria operacao) {
-        operacao.getEmpresa().setSaldo(operacao.getEmpresa().getSaldo().add(operacao.getValorTransacao()));
-        operacao.getCliente().setSaldo(operacao.getCliente().getSaldo().subtract(operacao.getValorComTaxa()));
+    private void realizarTransacaoDeDebito(TransacaoBancaria operacaoDeDebito) {
+        operacaoDeDebito.getEmpresa().setSaldo(operacaoDeDebito.getEmpresa().getSaldo().add(operacaoDeDebito.getValorTransacao()));
+        operacaoDeDebito.getCliente().setSaldo(operacaoDeDebito.getCliente().getSaldo().subtract(operacaoDeDebito.getValorComTaxa()));
     }
 
     /**
