@@ -31,19 +31,25 @@ public class EmpresaService {
      * <p>Método <b>findAllEmpresa()</b> para listar todas as empresas
      * cadastradas na base de dados.</p>
      *
-     * @return Todas as Empresas cadastradas.
+     * @return Lista de empresas cadastradas.
      **/
     public List<Empresa> findAllEmpresa() {
         return empresaRepository.findAll();
     }
 
     /**
-     * @param empresa Empresa empresa
-     *                <p>Método <b>save()</b> além de cadastrar uma nova empresa na base de dados, ele chama outros métodos
-     *                como {@link #isPresentEmail(Empresa) isPresentEmail()} e {@link #isPresentCnpj(Empresa) isPresentCnpj()
-     *                } verificando se o email e cnpj passados já estão cadastrados na base de dados.</p>
-     * @return Salvado a empresa.
-     **/
+     * Salva uma nova empresa no banco de dados e executa validações de documentos e e-mails.
+     *
+     * @param empresa a empresa a ser salva.
+     * @return a empresa salva no banco de dados.
+     *
+     * <p>Este método executa as seguintes operações:</p>
+     * <ul>
+     *   <li>Valida o CNPJ da empresa usando o {@link #documentValidator documentValidator.isValid()}.</li>
+     *   <li>Verifica se o e-mail da empresa já está presente no banco de dados usando {@link #isPresentEmail(Empresa)}.</li>
+     *   <li>Verifica se o CNPJ da empresa já está presente no banco de dados usando {@link #isPresentCnpj(Empresa)}.</li>
+     * </ul>
+     */
     public Empresa save(Empresa empresa) {
         String documentCnpj = documentValidator.isValid(empresa.getCnpj(), "empresa");
         empresa.setCnpj(documentCnpj);
@@ -62,14 +68,13 @@ public class EmpresaService {
     }
 
     /**
-     * @param empresa Empresa empresa
-     *                <p>Método <b>isPresentCnpj()</b> chama o método <b>findByCnpj()</b>
-     *                verificando se o CNPJ já está cadastrado na base de dados.</p>
-     *                if (empresas) {<br>
-     *                throw new CnpjUniqueException();<br>
-     *                }
-     * @throws CnpjUniqueException Mostrando o status e a mensagem.
-     **/
+     * Verifica se o CNPJ da empresa já está presente na base de dados.
+     *
+     * @param empresa a empresa para verificar se o CNPJ já está cadastrado.
+     * @throws CnpjUniqueException se o CNPJ já estiver cadastrado na base de dados.
+     *                             <p>Este método chama o método {@link #findByCnpj(Empresa)} para verificar se o CNPJ já está cadastrado.
+     *                             Se estiver, uma exceção {@link CnpjUniqueException} é lançada.</p>
+     */
     private void isPresentCnpj(Empresa empresa) {
         boolean empresas = findByCnpj(empresa);
         if (empresas) {
@@ -97,12 +102,12 @@ public class EmpresaService {
      *                verificando se o email já está cadastrado e se está ativo na base de dados.</p>
      *                <br>
      *                <pre> {@code
-     *                         if (empresasEmail) {
-     *                                   throw new EmailniqueException();
-     *                         }
-     *                }
+     *                                        if (empresasEmail) {
+     *                                                  throw new EmailniqueException();
+     *                                        }
+     *                               }
      *
-     *                </pre>
+     *                               </pre>
      * @throws EmailUniqueException Mostrando o status e a mensagem.
      **/
     private void isPresentEmail(Empresa empresa) {
@@ -113,9 +118,15 @@ public class EmpresaService {
     }
 
     /**
-     * @param empresa Empresa empresa.
-     *                <p>Método <b>findByEmail()</b> verifica na base de dados se já existe o email passado e se está ativa.</p>
-     * @return Caso for diferente de null o email é retornado.
+     * Verifica na base de dados se o email passado já está cadastrado e se a conta está ativa.
+     *
+     * @param empresa a empresa contendo o email a ser verificado.
+     * @return Se o email estiver presente e a conta
+     * estiver ativa, o método retorna true. Caso contrário, uma exceção {@link ContaInativaException} é lançada.
+     * @throws ContaInativaException se a conta associada ao email estiver inativa.
+     *
+     *                               <p>Este método chama o método {@link EmpresaRepository#findByEmail(String, boolean)} para verificar se o email
+     *                               já está cadastrado na base de dados e se a conta associada está ativa.</p>
      */
     private boolean findByEmail(Empresa empresa) {
         Empresa empresaEmail = empresaRepository.findByEmail(empresa.getEmail(), empresa.isAtivo());
@@ -142,14 +153,20 @@ public class EmpresaService {
     }
 
     /**
-     * @param empresa Empresa empresa
-     * @param id      Long id
-     *                <p>Método <b>update()</b> chama o método {@link #findById(Long) findById()} passando o id como parâmetro
-     *                para buscar na base de dados, chama o método </p><br>
-     * @return Retorna a empresa após ser salva na base de dados.
+     * Atualiza uma empresa na base de dados com base no ID fornecido.
+     *
+     * @param empresa a empresa com os novos dados a serem atualizados.
+     * @param id o ID da empresa a ser atualizada.
+     * @return a empresa atualizada após ser salva na base de dados.
+     * <br><br>
+     * <p>Este método chama o método {@link #findById(Long) findById()} passando o ID como parâmetro
+     * para buscar a empresa na base de dados. Em seguida, chama o método {@link #verifyNameAndEmailAndRateSystemNotNull(Empresa, Optional) verifyNameAndEmailAndRateSystemNotNull()}
+     * para validar e atualizar os campos da empresa com base nos novos dados. Por fim, a empresa
+     * atualizada é salva na base de dados e retornada.</p>
+     *
      * @see #verifyNameAndEmailAndRateSystemNotNull(Empresa, Optional)
      * @see #isPresentEmail(Empresa)
-     **/
+     */
     public Empresa update(Empresa empresa, Long id) {
         Optional<Empresa> empresaById = findById(id);
         findByEmail(empresa);
@@ -178,8 +195,8 @@ public class EmpresaService {
     }
 
     /**
-     * Verifica se o valor não é nulo e nem vazio, caso ele não for nenhum dos dois o Consumer aceita o argumento,
-     * se  ele não vai ser atualizado(aceitado).
+     * Verifica se o valor não é nulo e nem vazio, caso ele não for o Consumer aceita o argumento,
+     * se for vazio ou nulo ele não vai ser atualizado e nem aceito pelo Consumer.
      *
      * @param value  O valor a ser vericado.
      * @param setter caso não venha nulo ou vazio ele aceita o argumento.
