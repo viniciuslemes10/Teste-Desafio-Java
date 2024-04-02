@@ -61,4 +61,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.NOT_FOUND, exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restError);
     }
+
+    @ExceptionHandler(ContaInativaException.class)
+    private ResponseEntity<RestErrorMenssage> contaInativaException(ContaInativaException exception) {
+        RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restError);
+    }
 }
