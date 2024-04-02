@@ -12,4 +12,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Cliente findByEmail(String email);
 
     Cliente findByCpf(String cpf);
+
+    @Query("SELECT c FROM Cliente c WHERE id = :id AND ativo = :ativo")
+    Cliente findByAtivo(Long id, boolean ativo);
 }
