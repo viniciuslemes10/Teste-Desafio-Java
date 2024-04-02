@@ -213,6 +213,21 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restError);
     }
 
+    /**
+     * Método por lidar com a exceção {@link ContaInativaException}.
+     *
+     * <p>
+     * Este método é acionado quando uma {@code ContaInativaException} é lançada durante o processameto
+     * de uma solicitação REST.
+     * Ela cria uma instância de {@link RestErrorMenssage} com o status HTTP {@link HttpStatus#BAD_REQUEST} e a
+     * mensagem de erro fornecida pela exceção, e a retorna em uma resposta HTTP com status {@link HttpStatus#BAD_REQUEST}.
+     *
+     * </p>
+     * @param exception A exceção {@link ContaInativaException} capturada.
+     * @return Uma resposta HTTP com o status {@link HttpStatus#BAD_REQUEST} contendo a mensagem de erro capturada.
+     * @see ContaInativaException
+     * @see RestErrorMenssage
+     **/
     @ExceptionHandler(ContaInativaException.class)
     private ResponseEntity<RestErrorMenssage> contaInativaException(ContaInativaException exception) {
         RestErrorMenssage restError = new RestErrorMenssage(HttpStatus.BAD_REQUEST, exception.getMessage());
