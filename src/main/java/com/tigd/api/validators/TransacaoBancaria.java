@@ -21,5 +21,16 @@ public class TransacaoBancaria {
     private BigDecimal valorTransacao;
     @Autowired
     private BigDecimal valorComTaxa;
+    @Autowired
+    private boolean isDebito;
+
+
+    public boolean getIsDebito() {
+        return this.isDebito;
+    }
+
+    public void setValorComTaxa(BigDecimal valorComTaxa) {
+        this.valorComTaxa = valorComTaxa;
+    }
 
 }

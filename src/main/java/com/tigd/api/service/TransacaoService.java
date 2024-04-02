@@ -108,21 +108,24 @@ public class TransacaoService {
 
         BigDecimal valorTransacao = obterValorTransacao(transacao);
         BigDecimal taxaSistema = obterTaxaSistema(empresa);
-        BigDecimal valorComTaxa;
 
-        if (isDebito) {
-            verificarSaldoSuficiente(cliente.getSaldo(), valorTransacao);
-            valorComTaxa = calcularValorComTaxa(valorTransacao, taxaSistema);
+        TransacaoBancaria operacaoBancaria = new TransacaoBancaria(empresa, cliente, valorTransacao, taxaSistema, isDebito);
+
+        processarMovimentoFinanceiroComValidacaoDeSaldo(operacaoBancaria);
+
+        executarTransacaoComBaseNoTipo(operacaoBancaria, operacaoBancaria.getIsDebito());
+
+        atualizaSaldoClienteEmpresa(operacaoBancaria.getEmpresa(), operacaoBancaria.getCliente());
+    }
+
+    private void processarMovimentoFinanceiroComValidacaoDeSaldo(TransacaoBancaria transacaoBancaria) {
+        if (transacaoBancaria.getIsDebito()) {
+            verificarSaldoSuficiente(transacaoBancaria.getCliente().getSaldo(), transacaoBancaria.getValorTransacao());
+            transacaoBancaria.setValorComTaxa(calcularValorComTaxa(transacaoBancaria.getValorTransacao(), transacaoBancaria.getValorComTaxa()));
         } else {
-            valorComTaxa = calcularValorComTaxa(valorTransacao, taxaSistema);
-            verificarSaldoSuficiente(empresa.getSaldo(), valorComTaxa);
+            transacaoBancaria.setValorComTaxa(calcularValorComTaxa(transacaoBancaria.getValorTransacao(), transacaoBancaria.getValorComTaxa()));
+            verificarSaldoSuficiente(transacaoBancaria.getEmpresa().getSaldo(), transacaoBancaria.getValorComTaxa());
         }
-
-        TransacaoBancaria operacao = new TransacaoBancaria(empresa, cliente, valorTransacao, valorComTaxa);
-
-        executarTransacaoComBaseNoTipo(operacao, isDebito);
-
-        atualizaSaldoClienteEmpresa(operacao.getEmpresa(), operacao.getCliente());
     }
 
     private Empresa encontrarEmpresa(Transacao transacao) {
@@ -174,7 +177,7 @@ public class TransacaoService {
 
     private void executarTransacaoComBaseNoTipo(TransacaoBancaria transacaoBancaria, boolean isDebito) {
         if (isDebito) {
-            realizarTransacaoDeDebito(transacaoBancaria);
+            realizarTransacaoDeDepositar(transacaoBancaria);
         } else {
             realizarTransacaoDeSaque(transacaoBancaria);
         }
@@ -190,7 +193,7 @@ public class TransacaoService {
         return empresaPagadora.getSaldo().subtract(valorComTaxa);
     }
 
-    private void realizarTransacaoDeDebito(TransacaoBancaria operacaoDeDebito) {
+    private void realizarTransacaoDeDepositar(TransacaoBancaria operacaoDeDebito) {
         operacaoDeDebito.getEmpresa().setSaldo(operacaoDeDebito.getEmpresa().getSaldo().add(operacaoDeDebito.getValorTransacao()));
         operacaoDeDebito.getCliente().setSaldo(operacaoDeDebito.getCliente().getSaldo().subtract(operacaoDeDebito.getValorComTaxa()));
     }
