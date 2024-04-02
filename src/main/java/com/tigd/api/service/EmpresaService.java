@@ -2,6 +2,7 @@ package com.tigd.api.service;
 
 import com.tigd.api.domain.Empresa;
 import com.tigd.api.exceptions.CnpjUniqueException;
+import com.tigd.api.exceptions.ContaInativaException;
 import com.tigd.api.exceptions.EmailUniqueException;
 import com.tigd.api.exceptions.EmpresaNotFoundException;
 import com.tigd.api.repository.EmpresaRepository;
@@ -79,20 +80,29 @@ public class EmpresaService {
     /**
      * @param empresa Empresa empresa.
      *                <p>Método <b>findByCnpj()</b> verifica na base de dados se já existe o cnpj passado e se está ativo.</p>
-     * @return Caso for diferente de null o cnpj é retornado.
+     * @return Caso esteja ativo ele retorna true se não ele lança uma exception.
+     * @throws ContaInativaException Mostrando o status e a mensagem.
      */
     private boolean findByCnpj(Empresa empresa) {
         Empresa empresas = empresaRepository.findByCnpj(empresa.getCnpj(), empresa.isAtivo());
-        return empresas != null;
+        if (!empresas.isAtivo()) {
+            throw new ContaInativaException();
+        }
+        return true;
     }
 
     /**
      * @param empresa Empresa empresa
-     *                <p>Método <b>isPresentEmail()</b> chama o método <b>findByEmail()</b>
-     *                verificando se o email já está cadastrado em nossa base de dados.</p>
-     *                if (empresasEmail) {<br>
-     *                throw new EmailniqueException();<br>
+     *                <p>Método <b>isPresentEmail()</b> chama o método {@link #findByEmail(Empresa)}
+     *                verificando se o email já está cadastrado e se está ativo na base de dados.</p>
+     *                <br>
+     *                <pre> {@code
+     *                         if (empresasEmail) {
+     *                                   throw new EmailniqueException();
+     *                         }
      *                }
+     *
+     *                </pre>
      * @throws EmailUniqueException Mostrando o status e a mensagem.
      **/
     private void isPresentEmail(Empresa empresa) {
@@ -109,7 +119,10 @@ public class EmpresaService {
      */
     private boolean findByEmail(Empresa empresa) {
         Empresa empresaEmail = empresaRepository.findByEmail(empresa.getEmail(), empresa.isAtivo());
-        return empresaEmail != null;
+        if (!empresaEmail.isAtivo()) {
+            throw new ContaInativaException();
+        }
+        return true;
     }
 
     /**
@@ -138,8 +151,8 @@ public class EmpresaService {
      * @see #isPresentEmail(Empresa)
      **/
     public Empresa update(Empresa empresa, Long id) {
-        isPresentEmail(empresa);
-        Optional<Empresa> empresaById = empresaRepository.findById(id);
+        Optional<Empresa> empresaById = findById(id);
+        findByEmail(empresa);
         Empresa updateCompany = verifyNameAndEmailAndRateSystemNotNull(empresa, empresaById);
         return empresaRepository.save(updateCompany);
     }
