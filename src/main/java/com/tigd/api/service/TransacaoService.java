@@ -34,12 +34,14 @@ public class TransacaoService {
     private TransacaoRepository repository;
 
     /**
-     * Verifica o tipo de transação que será realizada 'S' (saque) ou 'D' (depósito).
-     * Caso contrário lança uma exceção IlegalArgumentExcetion.
+     * Verifica o tipo de transação que será realizada 'S' (saque) ou 'D' (depósito).<br>
+     * Caso contrário, lança uma exceção IllegalArgumentException.
+     * Ele chama o método {@link #obterTransacaoDepositoOuSaqueValidada obterTransacaoDepositoOuSaqueValidada(Transacao, char)}.
      *
      * @param transacao a transação a ser verificada.
-     * @return a transação se for do tipo 'S'(saque) ou 'D' (depósito).
-     **/
+     * @return a transação se for do tipo 'S' (saque) ou 'D' (depósito).
+     * @throws IllegalArgumentException se o tipo da transação não for 'S' ou 'D'.
+     */
     private Transacao validarTipoTransacao(Transacao transacao) {
         Character tipo = Character.toUpperCase(transacao.getTipo());
         return obterTransacaoDepositoOuSaqueValidada(transacao, tipo);
@@ -66,24 +68,20 @@ public class TransacaoService {
      * Salva a nova transação realizada na base de dados.
      *
      * @param transacao a transação que será salva.
-     * @return A transação salvada.
      **/
     private void save(Transacao transacao) {
         repository.save(transacao);
     }
 
     /**
-     * Processa uma Transação e atualiza os saldos do cliente e empresa.
+     * Processa uma transação e atualiza os saldos do cliente e da empresa.
      *
-     * @param transacao Transação que será processada. <br>
-     *                  Os métodos {@link #findByCompany} e {@link #findbyClient} buscam o cliente e a empresa
-     *                  que seram atualizado os saldos.
-     *                  Outros métodos para realizar a transação são: ({@link #obterValorTransacao},
-     *                  {@link #obterTaxaSistema}). {@link #validarTipoTransacao} De acordo com o tipo se por passado como
-     *                  'S' (saque) será executado o método {@link #processarTransacao}, caso for do tipo 'D' (depósito)
-     *                  será executado o método {@link #processarTransacao}).
-     * @return Salva na base de dados, mostrando a transação processada.
-     **/
+     * @param transacao a transação que será processada.
+     * @return a transação processada que foi salva na base de dados.
+     * @see #validarTipoTransacao(Transacao)
+     * @see #processarTipoEspecifico(Transacao)
+     * @see #save(Transacao)
+     */
     public Transacao processarTransacao(Transacao transacao) {
         Transacao tipoVerificado = validarTipoTransacao(transacao);
         processarTipoEspecifico(tipoVerificado);
@@ -91,6 +89,12 @@ public class TransacaoService {
         return transacao;
     }
 
+    /**
+     * Processa o tipo específico de transação com base no tipo especificado na transação.
+     *
+     * @param transacao a transação que será processada.
+     * @see #processarTransacao(Transacao, boolean)
+     */
     private void processarTipoEspecifico(Transacao transacao) {
         switch (transacao.getTipo()) {
             case 'D':
@@ -102,6 +106,22 @@ public class TransacaoService {
         }
     }
 
+    /**
+     * Processa uma transação bancária com base nas informações fornecidas. Isso inclui encontrar
+     * a empresa e o cliente associados à transação, obter o valor da transação e a taxa do sistema,
+     * criar uma instância de TransacaoBancaria com essas informações, processar o movimento financeiro
+     * com validação de saldo, executar a transação com base no tipo e atualizar os saldos do cliente e da empresa.
+     *
+     * @param transacao a transação bancária a ser processada.
+     * @param isDebito indica se a transação é um débito ou não.
+     * @see #encontrarEmpresa(Transacao)
+     * @see #encontrarCliente(Transacao)
+     * @see #obterValorTransacao(Transacao)
+     * @see #obterTaxaSistema(Empresa)
+     * @see #processarMovimentoFinanceiroComValidacaoDeSaldo(TransacaoBancaria)
+     * @see #executarTransacaoComBaseNoTipo(TransacaoBancaria)
+     * @see #atualizaSaldoClienteEmpresa(Empresa, Cliente)
+     */
     private void processarTransacao(Transacao transacao, boolean isDebito) {
         Empresa empresa = encontrarEmpresa(transacao);
         Cliente cliente = encontrarCliente(transacao);
@@ -113,11 +133,23 @@ public class TransacaoService {
 
         processarMovimentoFinanceiroComValidacaoDeSaldo(operacaoBancaria);
 
-        executarTransacaoComBaseNoTipo(operacaoBancaria, operacaoBancaria.getIsDebito());
+        executarTransacaoComBaseNoTipo(operacaoBancaria);
 
         atualizaSaldoClienteEmpresa(operacaoBancaria.getEmpresa(), operacaoBancaria.getCliente());
     }
 
+    /**
+     * Processa o movimento financeiro de uma transação bancária, incluindo a validação de saldo.
+     * Este método verifica se a transação é um débito ou não e realiza as seguintes etapas:<br>
+     * - Se for um débito, verifica se o saldo do cliente é suficiente para a transação e,
+     *   em seguida, calcula o valor da transação com a taxa aplicada.
+     * - Se não for um débito, calcula o valor da transação com a taxa aplicada e,
+     *   em seguida, verifica se o saldo da empresa é suficiente para a transação.
+     *
+     * @param transacaoBancaria a transação bancária a ser processada.
+     * @see #verificarSaldoSuficiente(BigDecimal, BigDecimal) método usado para verificar se o saldo é suficiente.
+     * @see #calcularValorComTaxa(BigDecimal, BigDecimal) método usado para calcular o valor da transação com a taxa aplicada.
+     */
     private void processarMovimentoFinanceiroComValidacaoDeSaldo(TransacaoBancaria transacaoBancaria) {
         if (transacaoBancaria.getIsDebito()) {
             verificarSaldoSuficiente(transacaoBancaria.getCliente().getSaldo(), transacaoBancaria.getValorTransacao());
@@ -128,10 +160,22 @@ public class TransacaoService {
         }
     }
 
+    /**
+     * Localiza a empresa associada à transação bancária fornecida.
+     *
+     * @param transacao a transação bancária para a qual encontrar a empresa.
+     * @return a empresa associada à transação bancária.
+     */
     private Empresa encontrarEmpresa(Transacao transacao) {
         return findByCompany(transacao.getEmpresa().getId());
     }
 
+    /**
+     * Localiza o cliente associado à transação bancária fornecida.
+     *
+     * @param transacao a transação bancária para a qual encontrar o cliente.
+     * @return o cliente associado à transação bancária.
+     */
     private Cliente encontrarCliente(Transacao transacao) {
         return findbyClient(transacao.getCliente().getId());
     }
@@ -171,28 +215,74 @@ public class TransacaoService {
         }
     }
 
+    /**
+     * Calcula o valor da transação com a taxa do sistema aplicada.
+     *
+     * @param valorTransacao o valor da transação antes da aplicação da taxa.
+     * @param taxaSistema a taxa do sistema a ser aplicada à transação.
+     * @return o valor da transação após a aplicação da taxa do sistema.
+     */
     private BigDecimal calcularValorComTaxa(BigDecimal valorTransacao, BigDecimal taxaSistema) {
         return valorTransacao.add(valorTransacao.multiply(taxaSistema));
     }
 
-    private void executarTransacaoComBaseNoTipo(TransacaoBancaria transacaoBancaria, boolean isDebito) {
-        if (isDebito) {
+    /**
+     * Executa a transação bancária com base no tipo especificado na transação.
+     * <br>
+     * Este método verifica se a transação é um débito ou não e, em seguida, executa a transação
+     * correspondente com base no tipo. Se a transação for um débito, chama o método para realizar
+     * a transação de depósito. Caso contrário, chama o método para realizar a transação de saque.
+     * <br>
+     * @param transacaoBancaria a transação bancária a ser executada.
+     * @see #realizarTransacaoDeDepositar(TransacaoBancaria) método para realizar uma transação de depósito.
+     * @see #realizarTransacaoDeSaque(TransacaoBancaria) método para realizar uma transação de saque.
+     */
+    private void executarTransacaoComBaseNoTipo(TransacaoBancaria transacaoBancaria) {
+        if (transacaoBancaria.getIsDebito()) {
             realizarTransacaoDeDepositar(transacaoBancaria);
         } else {
             realizarTransacaoDeSaque(transacaoBancaria);
         }
     }
 
+    /**
+     * Realiza uma transação de saque bancário.
+     *
+     * Este método calcula o valor total a ser retirado do saldo da empresa e adicionado ao saldo do cliente
+     * com base no valor da transação e na taxa aplicada. Em seguida, atualiza os saldos da empresa e do cliente
+     * de acordo com o resultado do saque.
+     *
+     * @param operacaoDeSaque a transação bancária de saque a ser processada.
+     * @see #calculandoValorTotalSacado(Empresa, BigDecimal) método para calcular o valor total sacado.
+     */
     private void realizarTransacaoDeSaque(TransacaoBancaria operacaoDeSaque) {
         BigDecimal valorASePagar = calculandoValorTotalSacado(operacaoDeSaque.getEmpresa(), operacaoDeSaque.getValorComTaxa());
         operacaoDeSaque.getEmpresa().setSaldo(valorASePagar);
         operacaoDeSaque.getCliente().setSaldo(operacaoDeSaque.getCliente().getSaldo().add(operacaoDeSaque.getValorTransacao()));
     }
 
+    /**
+     * Calcula o valor total a ser deduzido do saldo da empresa pagadora após uma transação de saque.
+     *
+     * Este método subtrai o valor da transação, incluindo a taxa aplicada, do saldo da empresa pagadora
+     * para determinar o valor total a ser retirado do saldo da empresa após a realização de um saque.
+     *
+     * @param empresaPagadora a empresa da qual será deduzido o valor da transação.
+     * @param valorComTaxa o valor da transação, incluindo a taxa aplicada.
+     * @return o valor total a ser deduzido do saldo da empresa pagadora.
+     */
     private BigDecimal calculandoValorTotalSacado(Empresa empresaPagadora, BigDecimal valorComTaxa) {
         return empresaPagadora.getSaldo().subtract(valorComTaxa);
     }
 
+    /**
+     * Realiza uma transação de depósito bancário.
+     *
+     * Este método adiciona o valor da transação ao saldo da empresa depositante e
+     * subtrai o valor total da transação (incluindo a taxa aplicada) do saldo do cliente.
+     *
+     * @param operacaoDeDebito a transação bancária de depósito a ser processada.
+     */
     private void realizarTransacaoDeDepositar(TransacaoBancaria operacaoDeDebito) {
         operacaoDeDebito.getEmpresa().setSaldo(operacaoDeDebito.getEmpresa().getSaldo().add(operacaoDeDebito.getValorTransacao()));
         operacaoDeDebito.getCliente().setSaldo(operacaoDeDebito.getCliente().getSaldo().subtract(operacaoDeDebito.getValorComTaxa()));
