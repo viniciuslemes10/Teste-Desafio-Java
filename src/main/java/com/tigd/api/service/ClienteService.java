@@ -1,9 +1,6 @@
 package com.tigd.api.service;
 
-import com.tigd.api.exceptions.ClienteNotFoundException;
-import com.tigd.api.exceptions.CpfUniqueException;
-import com.tigd.api.exceptions.EmailUniqueException;
-import com.tigd.api.exceptions.CpfIllegalArgException;
+import com.tigd.api.exceptions.*;
 import com.tigd.api.repository.ClienteRepository;
 import com.tigd.api.domain.Cliente;
 import com.tigd.api.validators.DocumentValidator;
@@ -12,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+
 /**
  @author gemeoslemes viniciuslemes10 <br>
  Classe de <b>ClienteService</b>
@@ -33,11 +32,18 @@ public class ClienteService {
     public List<Cliente> findAllClients() {
         return clienteRepository.findAll();
     }
+
     /**
-     * Verifica se o
-     * @param cliente O cliente é passado como parâmetro
-     * @return Salva um cliente na base de dados na Entity 'clientes'
-     **/
+     * Salva um cliente na base de dados.
+     *
+     * Este método recebe um cliente como parâmetro, valida o CPF ou CNPJ do cliente,
+     * e então salva o cliente na base de dados.
+     *
+     * @param cliente o cliente a ser salvo na base de dados.
+     * @return o cliente salvo na base de dados na entidade 'clientes'.
+     * @see #isCpfPresent(Cliente)
+     * @see #isEmailPresent(Cliente)
+     */
     public Cliente save(Cliente cliente) {
         String documentCpf = documentValidator.isValid(cliente.getCpf(), "cliente");
         cliente.setCpf(documentCpf);
@@ -45,6 +51,7 @@ public class ClienteService {
         isEmailPresent(cliente);
         return clienteRepository.save(cliente);
     }
+
     /**
      * @param cliente O cliente é passado como parâmetro.
      * Este método verifica se o cpf já está cadastrado em
@@ -56,6 +63,7 @@ public class ClienteService {
             throw new CpfUniqueException();
         }
     }
+
     /**
      * @param cliente O Cliente é passado como parâmetro.<br>
      * Método <b>findByCpf()</b> verifica se o cliente é diferente de null,
@@ -64,9 +72,9 @@ public class ClienteService {
      * **/
     private boolean findByCpf(Cliente cliente) {
         Cliente clientes = clienteRepository.findByCpf(cliente.getCpf());
-        System.out.println(clientes);
         return clientes != null;
     }
+
     /**
      @param cliente cliente.
      <p>Buscamos por email e verificamos se este email
@@ -80,6 +88,7 @@ public class ClienteService {
             throw new EmailUniqueException();
         }
     }
+
     /**
      * @param cliente cliente.
      * @return <p>Um cliente se for diferente de null.</p>
@@ -88,6 +97,7 @@ public class ClienteService {
        Cliente clientes = clienteRepository.findByEmail(cliente.getEmail());
        return clientes != null;
     }
+
     /**
      @param id id.
      @return Retorna um cliente buscado pelo id.
@@ -100,6 +110,7 @@ public class ClienteService {
             throw new ClienteNotFoundException();
         }
     }
+
     /**
      @param cliente cliente.
      @return Salvando cliente com saldo atualizado na base de dados.
@@ -107,6 +118,7 @@ public class ClienteService {
     public Cliente atualizarSaldo(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
+
     /**
      * @param cliente cliente
      * @param id id
@@ -117,29 +129,82 @@ public class ClienteService {
         Cliente clienteAtualizado = verifyNameAndEmailNotNull(cliente, clientById);
         return update(clienteAtualizado);
     }
+
     /**
-     * @param cliente cliente
-     * @param clienteOptional clienteOptional
-     * <p>Verifica se o <b>cliente(nome, email)</b> são diferetes de null e
-     *    vazios.</p>
-     * @return clienteOptional
-     **/
+     * Verifica se o nome e o email do cliente não são nulos ou vazios e define-os em um objeto Cliente existente, se presente.
+     *
+     * @param cliente         o cliente com as informações a serem verificadas e definidas.
+     * @param clienteOptional o Optional que contém o cliente existente, se presente.
+     * @return o cliente existente após definir as informações, se presente.
+     * @see #setValueIfNotNullOrEmpty(String, Consumer)
+     */
     private Cliente verifyNameAndEmailNotNull(Cliente cliente, Optional<Cliente> clienteOptional) {
-        if (cliente.getNome() != null && !cliente.getNome().isEmpty()) {
-            clienteOptional.get().setNome(cliente.getNome());
-        }
-        if ( cliente.getEmail() != null && !cliente.getEmail().isEmpty()) {
-            clienteOptional.get().setEmail(cliente.getEmail());
-        }
+        clienteOptional.ifPresent(clienteExitente -> {
+                setValueIfNotNullOrEmpty(cliente.getNome(), clienteExitente::setNome);
+                setValueIfNotNullOrEmpty(cliente.getEmail(), clienteExitente::setEmail);
+        });
         return clienteOptional.get();
     }
+
     /**
-     * @param cliente cliente
-     * @return <p>return um cliente salvando na base de dados.</p>
-     **/
+     * Define o valor em um objeto usando um setter fornecido, se o valor não for nulo ou vazio.
+     *
+     * @param value  o valor a ser definido no objeto.
+     * @param setter o setter que será usado para definir o valor no objeto.
+     */
+    private void setValueIfNotNullOrEmpty(String value, Consumer<String> setter) {
+        if(value != null && !value.isEmpty()) {
+            setter.accept(value);
+        }
+    }
+
+    /**
+     * Atualiza as informações de um cliente na base de dados.
+     *
+     * Este método recebe um cliente como parâmetro e realiza as seguintes operações:
+     * - Busca na base de dados o cliente ativo com base no ID fornecido.
+     * - Valida se a conta do cliente está ativa.
+     * - Verifica se o email do cliente já está presente na base de dados.
+     * - Salva o cliente na base de dados após as operações de validação.
+     *
+     * @param cliente o cliente cujas informações serão atualizadas.
+     * @return o cliente atualizado na base de dados.
+     * @throws ContaInativaException se a conta do cliente estiver inativa.
+     * @see #encontrarClienteAtivo(Long, boolean)
+     * @see #validarContaAtiva(Cliente)
+     * @see #isEmailPresent(Cliente)
+     */
     private Cliente update(Cliente cliente) {
+        Cliente clienteAtivo = encontrarClienteAtivo(cliente.getId(), cliente.isAtivo());
+        validarContaAtiva(clienteAtivo);
+        isEmailPresent(clienteAtivo);
         return clienteRepository.save(cliente);
     }
+
+    /**
+     * Valida se a conta do cliente está ativa.
+     *
+     * @param cliente o cliente cuja conta será validada.
+     * @throws ContaInativaException se a conta do cliente estiver inativa.
+     */
+    private void validarContaAtiva(Cliente cliente) {
+        if (!cliente.isAtivo()) {
+            throw new ContaInativaException();
+        }
+    }
+
+    /**
+     * Encontra um cliente ativo na base de dados com base no status de ativação fornecido.
+     *
+     * @param id do cliente que devemos buscar.
+     * @param ativo o status de ativação do cliente a ser encontrado.
+     *
+     * @return o cliente ativo encontrado na base de dados.
+     */
+    private Cliente encontrarClienteAtivo(Long id, boolean ativo) {
+        return clienteRepository.findByAtivo(id, ativo);
+    }
+
     /**
      * @param cliente cliente
      * <p>Recebe como parâmetro um cliente Optional onde pode ou não vir.
