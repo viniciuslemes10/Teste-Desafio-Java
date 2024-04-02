@@ -7,7 +7,6 @@ import lombok.*;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.math.BigDecimal;
-import java.util.Set;
 
 @Entity()
 @Table(name = "clientes")

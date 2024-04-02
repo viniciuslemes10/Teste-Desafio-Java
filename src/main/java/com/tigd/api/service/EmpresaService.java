@@ -69,7 +69,6 @@ public class EmpresaService {
         if (empresas) {
             throw new CnpjUniqueException();
         }
-
     }
 
     /**
