@@ -61,7 +61,7 @@ public class ClienteService {
      * Este método verifica se o cpf já está cadastrado em
      * nossa base de dados.
      **/
-    private void isCpfPresent(Cliente cliente) {
+    protected void isCpfPresent(Cliente cliente) {
         boolean clienteCpf = findByCpf(cliente);
         if(clienteCpf) {
             throw new CpfUniqueException();
@@ -74,7 +74,7 @@ public class ClienteService {
      *  se o resultado esperado for true.
      * @return cliente.
      * **/
-    private boolean findByCpf(Cliente cliente) {
+    protected boolean findByCpf(Cliente cliente) {
         Cliente clientes = clienteRepository.findByCpf(cliente.getCpf());
         return clientes != null;
     }
@@ -86,7 +86,7 @@ public class ClienteService {
      @exception EmailUniqueException Quando chamada lança uma mensagem de erro
      e seu status.
      **/
-    private void isEmailPresent(Cliente cliente) {
+    protected void isEmailPresent(Cliente cliente) {
         boolean clienteEmail = findByEmail(cliente);
         if(clienteEmail) {
             throw new EmailUniqueException();
@@ -97,7 +97,7 @@ public class ClienteService {
      * @param cliente cliente.
      * @return <p>Um cliente se for diferente de null.</p>
      **/
-    private boolean findByEmail(Cliente cliente) {
+    protected boolean findByEmail(Cliente cliente) {
        Cliente clientes = clienteRepository.findByEmail(cliente.getEmail());
        return clientes != null;
     }
