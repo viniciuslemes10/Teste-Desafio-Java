@@ -295,7 +295,7 @@ public class TransacaoService {
      * @return A empresa encontrada, ou null se não for encontrada ou não for válida.
      */
     private Empresa findByCompany(Long empresaId) {
-        return encontrarClienteOuEmpresaValido(empresaService.findById(empresaId));
+        return encontrarClienteOuEmpresaValido(empresaService.buscarEmpresaPorId(empresaId));
     }
 
     /**
@@ -328,7 +328,7 @@ public class TransacaoService {
      **/
     private void atualizaSaldoClienteEmpresa(Empresa empresa, Cliente cliente) {
         clienteService.atualizarSaldo(cliente);
-        empresaService.atualizarSaldo(empresa);
+        empresaService.salvarEmpresa(empresa);
     }
 
     /**

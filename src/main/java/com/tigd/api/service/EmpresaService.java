@@ -6,14 +6,13 @@ import com.tigd.api.exceptions.ContaInativaException;
 import com.tigd.api.exceptions.EmailUniqueException;
 import com.tigd.api.exceptions.EmpresaNotFoundException;
 import com.tigd.api.repository.EmpresaRepository;
+import com.tigd.api.validators.ContaValidador;
 import com.tigd.api.validators.DocumentValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * @author gemeoslemes, viniciuslemes10<br>
@@ -26,6 +25,9 @@ public class EmpresaService {
 
     @Autowired
     private DocumentValidator documentValidator;
+
+    @Autowired
+    private ContaValidador contaValidador;
 
     /**
      * <p>Método <b>findAllEmpresa()</b> para listar todas as empresas
@@ -46,14 +48,14 @@ public class EmpresaService {
      * <p>Este método executa as seguintes operações:</p>
      * <ul>
      *   <li>Valida o CNPJ da empresa usando o {@link #documentValidator documentValidator.isValid()}.</li>
-     *   <li>Verifica se o e-mail da empresa já está presente no banco de dados usando {@link #isPresentEmail(Empresa)}.</li>
+     *   <li>Verifica se o e-mail da empresa já está presente no banco de dados usando {@link #verificarExistenciaEmailNaBaseDeDados(Empresa)}.</li>
      *   <li>Verifica se o CNPJ da empresa já está presente no banco de dados usando {@link #isPresentCnpj(Empresa)}.</li>
      * </ul>
      */
     public Empresa save(Empresa empresa) {
         String documentCnpj = documentValidator.isValid(empresa.getCnpj(), "empresa");
         empresa.setCnpj(documentCnpj);
-        isPresentEmail(empresa);
+        verificarExistenciaEmailNaBaseDeDados(empresa);
         isPresentCnpj(empresa);
         return empresaRepository.save(empresa);
     }
@@ -63,7 +65,7 @@ public class EmpresaService {
      *                <p>Método <b>atualizaSaldo()</b> este método atualiza o saldo da empresa ao realizar uma transação.</p>
      * @return Saldo atualizado.
      **/
-    public Empresa atualizarSaldo(Empresa empresa) {
+    public Empresa salvarEmpresa(Empresa empresa) {
         return empresaRepository.save(empresa);
     }
 
@@ -98,21 +100,21 @@ public class EmpresaService {
 
     /**
      * @param empresa Empresa empresa
-     *                <p>Método <b>isPresentEmail()</b> chama o método {@link #findByEmail(Empresa)}
+     *                <p>Método <b>isPresentEmail()</b> chama o método {@link #verificarEmailAtivoDaEmpresa(Empresa)}
      *                verificando se o email já está cadastrado e se está ativo na base de dados.</p>
      *                <br>
      *                <pre> {@code
      *                                        if (empresasEmail) {
-     *                                                  throw new EmailniqueException();
+     *                                                  throw new EmailUniqueException();
      *                                        }
      *                               }
      *
      *                               </pre>
      * @throws EmailUniqueException Mostrando o status e a mensagem.
      **/
-    private void isPresentEmail(Empresa empresa) {
-        boolean empresaEmail = findByEmail(empresa);
-        if (empresaEmail) {
+    private void verificarExistenciaEmailNaBaseDeDados(Empresa empresa) {
+        boolean emailExistente = empresaRepository.existsByEmail(empresa.getEmail());
+        if (emailExistente) {
             throw new EmailUniqueException();
         }
     }
@@ -125,11 +127,11 @@ public class EmpresaService {
      * estiver ativa, o método retorna true. Caso contrário, uma exceção {@link ContaInativaException} é lançada.
      * @throws ContaInativaException se a conta associada ao email estiver inativa.
      *
-     *                               <p>Este método chama o método {@link EmpresaRepository#findByEmail(String, boolean)} para verificar se o email
+     *                               <p>Este método chama o método {@link EmpresaRepository#findByEmail(Long, boolean)} para verificar se o email
      *                               já está cadastrado na base de dados e se a conta associada está ativa.</p>
      */
-    private boolean findByEmail(Empresa empresa) {
-        Empresa empresaEmail = empresaRepository.findByEmail(empresa.getEmail(), empresa.isAtivo());
+    private boolean verificarEmailAtivoDaEmpresa(Empresa empresa) {
+        Empresa empresaEmail = empresaRepository.findByEmail(empresa.getId(), empresa.isAtivo());
         if (!empresaEmail.isAtivo()) {
             throw new ContaInativaException();
         }
@@ -143,7 +145,7 @@ public class EmpresaService {
      * @return empresa.
      * @throws EmpresaNotFoundException mostrando o status e a mensagem.
      **/
-    public Optional<Empresa> findById(Long id) {
+    public Optional<Empresa> buscarEmpresaPorId(Long id) {
         Optional<Empresa> empresa = empresaRepository.findById(id);
         if (empresa.isPresent()) {
             return empresa;
@@ -158,65 +160,21 @@ public class EmpresaService {
      * @param empresa a empresa com os novos dados a serem atualizados.
      * @param id o ID da empresa a ser atualizada.
      * @return a empresa atualizada após ser salva na base de dados.
-     * <br><br>
-     * <p>Este método chama o método {@link #findById(Long) findById()} passando o ID como parâmetro
-     * para buscar a empresa na base de dados. Em seguida, chama o método {@link #verifyNameAndEmailAndRateSystemNotNull(Empresa, Optional) verifyNameAndEmailAndRateSystemNotNull()}
-     * para validar e atualizar os campos da empresa com base nos novos dados. Por fim, a empresa
-     * atualizada é salva na base de dados e retornada.</p>
+     * @throws EmpresaNotFoundException se a empresa com o ID fornecido não for encontrada na base de dados.
+     * @throws ContaInativaException se a conta da empresa não estiver ativa.
+     * @throws EmailUniqueException se o email da empresa já estiver em uso por outra empresa na base de dados.
      *
-     * @see #verifyNameAndEmailAndRateSystemNotNull(Empresa, Optional)
-     * @see #isPresentEmail(Empresa)
+     * @see #buscarEmpresaPorId(Long)
+     * @see #verificarEmailAtivoDaEmpresa(Empresa)
+     * @see #verificarExistenciaEmailNaBaseDeDados(Empresa)
      */
     public Empresa update(Empresa empresa, Long id) {
-        Optional<Empresa> empresaById = findById(id);
-        findByEmail(empresa);
-        Empresa updateCompany = verifyNameAndEmailAndRateSystemNotNull(empresa, empresaById);
+        Optional<Empresa> empresaById = buscarEmpresaPorId(id);
+        verificarEmailAtivoDaEmpresa(empresaById.get());
+        verificarExistenciaEmailNaBaseDeDados(empresa);
+        Empresa updateCompany = contaValidador.verifyNameAndEmailAndRateSystemNotNull(empresa, empresaById);
+
         return empresaRepository.save(updateCompany);
-    }
-
-    /**
-     * Verifica se os campos nome, email e taxa do sistema da empresa não são nulos.
-     * Se uma instância de empresa estiver presente no Optional, os campos serão atualizados
-     * com os valores fornecidos, desde que não sejam nulos.
-     *
-     * @param empresa         a empresa contendo os valores a serem verificados e, possivelmente, atualizados.
-     * @param empresaOptional um Optional que pode conter uma instância existente de empresa.
-     * @return a instância de empresa presente no Optional, se existir.
-     * @see #setValueIfNotNullOrEmpty(String, Consumer)
-     * @see #setValueIfNotNull(BigDecimal, Consumer)
-     */
-    private Empresa verifyNameAndEmailAndRateSystemNotNull(Empresa empresa, Optional<Empresa> empresaOptional) {
-        empresaOptional.ifPresent(empresaExistente -> {
-            setValueIfNotNullOrEmpty(empresa.getNome(), empresaExistente::setNome);
-            setValueIfNotNullOrEmpty(empresa.getEmail(), empresaExistente::setEmail);
-            setValueIfNotNull(empresa.getTaxaSistema(), empresaExistente::setTaxaSistema);
-        });
-        return empresaOptional.get();
-    }
-
-    /**
-     * Verifica se o valor não é nulo e nem vazio, caso ele não for o Consumer aceita o argumento,
-     * se for vazio ou nulo ele não vai ser atualizado e nem aceito pelo Consumer.
-     *
-     * @param value  O valor a ser vericado.
-     * @param setter caso não venha nulo ou vazio ele aceita o argumento.
-     */
-    private void setValueIfNotNullOrEmpty(String value, Consumer<String> setter) {
-        if (value != null && !value.isEmpty()) {
-            setter.accept(value);
-        }
-    }
-
-    /**
-     * Verica se o valor é diferente de nulo, caso seja o Consumer aceita o argumento.
-     *
-     * @param value  O valor a ser vericado.
-     * @param setter caso não venha nulo ele aceita o argumento.
-     */
-    private void setValueIfNotNull(BigDecimal value, Consumer<BigDecimal> setter) {
-        if (value != null) {
-            setter.accept(value);
-        }
     }
 
     /**

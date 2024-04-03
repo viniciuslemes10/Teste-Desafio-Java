@@ -3,6 +3,7 @@ package com.tigd.api.service;
 import com.tigd.api.exceptions.*;
 import com.tigd.api.repository.ClienteRepository;
 import com.tigd.api.domain.Cliente;
+import com.tigd.api.validators.ContaValidador;
 import com.tigd.api.validators.DocumentValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class ClienteService {
 
     @Autowired
     private DocumentValidator documentValidator;
+
+    @Autowired
+    private ContaValidador contaValidador;
 
     /**
      * Retorna uma lista de todos os clientes
@@ -126,7 +130,7 @@ public class ClienteService {
      **/
     public Cliente updateClient(Cliente cliente, Long id) {
         Optional<Cliente> clientById = findById(id);
-        Cliente clienteAtualizado = verifyNameAndEmailNotNull(cliente, clientById);
+        Cliente clienteAtualizado = contaValidador.verifyNameAndEmailNotNull(cliente, clientById);
         return update(clienteAtualizado);
     }
 

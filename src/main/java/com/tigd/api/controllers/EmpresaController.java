@@ -5,7 +5,6 @@ import com.tigd.api.dto.EmpresaDTO;
 import com.tigd.api.dto.EmpresaUpdateDTO;
 import com.tigd.api.service.EmpresaService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -45,7 +44,7 @@ public class EmpresaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Empresa> inactiveEmpresa(@PathVariable Long id) {
-        Optional<Empresa> empresaOpitinal = service.findById(id);
+        Optional<Empresa> empresaOpitinal = service.buscarEmpresaPorId(id);
         Empresa empresa = service.deleteByIdEmpresa(empresaOpitinal);
         return ResponseEntity.noContent().build();
     }
