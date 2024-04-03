@@ -14,6 +14,9 @@ import java.math.BigDecimal;
  *
  * Esta classe encapsula os detalhes de uma transação bancária, incluindo informações sobre a empresa envolvida,
  * o cliente envolvido, o valor da transação, o valor da transação com taxa, e se é uma transação de débito.
+ *
+ * @author viniciuslemes10
+ * @author gemeoslemes
  */
 @Getter
 @AllArgsConstructor

@@ -4,9 +4,10 @@ import com.tigd.api.exceptions.CnpjIllegalArgException;
 import org.springframework.stereotype.Component;
 
 /**
- * @author viniciuslemes10, gemeoslemes<br>
  * Classe de validação de CNPJ(Cadastro Nacional de Pessoa Júridica).
  * Estende da classe {@link CpfValidator} para reutilizar funcionalidades de validação.
+ * @author viniciuslemes10
+ * @author  gemeoslemes
  **/
 @Component
 public class CnpjValidator extends CpfValidator {

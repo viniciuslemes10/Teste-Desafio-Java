@@ -8,7 +8,16 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-@Component
+/**
+ * Classe responsável por validar e atualizar informações de Cliente e Empresa.
+ *
+ * Esta classe valida se os dados recebidos não são nulos ou vazios e, caso não sejam, atualiza as informações
+ * das classes Cliente e Empresa.
+ *
+ * @author gemeoslemes
+ * @author viniciuslemes10
+ */
+ @Component
 public class ValidadorAtualizadorEntidade {
 
     /**
