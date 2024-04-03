@@ -9,6 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 
+/**
+ * Classe que representa uma transação bancária.
+ *
+ * Esta classe encapsula os detalhes de uma transação bancária, incluindo informações sobre a empresa envolvida,
+ * o cliente envolvido, o valor da transação, o valor da transação com taxa, e se é uma transação de débito.
+ */
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +29,6 @@ public class TransacaoBancaria {
     private BigDecimal valorComTaxa;
     @Autowired
     private boolean isDebito;
-
 
     public boolean getIsDebito() {
         return this.isDebito;
