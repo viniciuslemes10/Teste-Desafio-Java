@@ -1,12 +1,7 @@
 package com.tigd.api.controllers;
 
-import com.tigd.api.domain.Cliente;
-import com.tigd.api.domain.Empresa;
 import com.tigd.api.domain.Transacao;
-import com.tigd.api.dto.ClienteDTO;
 import com.tigd.api.dto.TransacaoDTO;
-import com.tigd.api.service.ClienteService;
-import com.tigd.api.service.EmpresaService;
 import com.tigd.api.service.TransacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +10,31 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Controlador para operações relacionadas às transações.
+ *
+ * Este controlador gerencia operações relacionadas às transações, como processamento de novas transações e listagem
+ * de todas as transações.
+ *
+ * As requisições são mapeadas para o caminho "/transacoes".
+ *
+ * @author viniciuslemes10
+ * @author gemeoslemes
+ */
 @RestController
 @RequestMapping("/transacoes")
 public class TransacaoController {
     @Autowired
     private TransacaoService service;
 
+    /**
+     * Processa uma nova transação.
+     *
+     * @param transacaoDTO o DTO da transação contendo as informações para processar a transação
+     * @param uriComponentsBuilder o construtor de componentes de URI para construir a URI da nova transação
+     * @return uma resposta HTTP contendo a transação processada e a URI para acessá-la
+     */
     @PostMapping
     public ResponseEntity<Transacao> createTransacao(@RequestBody TransacaoDTO transacaoDTO,
                                                      UriComponentsBuilder uriComponentsBuilder) {
@@ -32,6 +44,11 @@ public class TransacaoController {
         return ResponseEntity.created(uri).body(transacao);
     }
 
+    /**
+     * Lista todas as transações cadastradas.
+     *
+     * @return uma resposta HTTP contendo a lista de todas as transações
+     */
     @GetMapping
     public ResponseEntity<List<Transacao>> listAllTransacao() {
         List<Transacao> transacaos = service.findAllTransacoes();

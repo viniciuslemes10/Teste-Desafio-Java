@@ -8,6 +8,14 @@ import org.hibernate.validator.constraints.br.CPF;
 
 import java.math.BigDecimal;
 
+/**
+ * Classe que representa um cliente.
+ *
+ * Esta classe representa um cliente da aplicação, contendo informações como nome, CPF, email e saldo.
+ *
+ * @author viniciuslemes10
+ * @author gemeoslemes
+ */
 @Entity()
 @Table(name = "clientes")
 @Getter
@@ -32,6 +40,11 @@ public class Cliente {
     @Column(name = "ativo")
     private boolean ativo;
 
+    /**
+     * Construtor para criar um objeto Cliente a partir de um objeto ClienteDTO.
+     *
+     * @param clienteDTO o DTO do cliente contendo informações para inicialização
+     */
     public Cliente(ClienteDTO clienteDTO) {
         this.nome = clienteDTO.nome().trim().replaceAll("\\s+", " ");
         this.cpf = clienteDTO.cpf().trim().replaceAll("\\s+", "");;
@@ -40,11 +53,21 @@ public class Cliente {
         this.ativo = true;
     }
 
+    /**
+     * Construtor para criar um objeto Cliente a partir de um objeto ClienteUpdateDTO.
+     *
+     * @param clienteUpdateDTO o DTO de atualização do cliente contendo informações para inicialização
+     */
     public Cliente(ClienteUpdateDTO clienteUpdateDTO) {
         this.nome = clienteUpdateDTO.nome().trim();
         this.email = clienteUpdateDTO.email().trim();
     }
 
+    /**
+     * Retorna uma representação em forma de string do objeto Cliente.
+     *
+     * @return uma string representando o objeto Cliente
+     */
     @Override
     public String toString() {
         return "Cliente{" +

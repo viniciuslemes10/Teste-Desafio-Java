@@ -7,7 +7,14 @@ import lombok.*;
 import org.hibernate.validator.constraints.br.CNPJ;
 
 import java.math.BigDecimal;
-
+/**
+ * Classe que representa uma empresa.
+ *
+ * Esta classe representa uma empresa da aplicação, contendo informações como nome, CNPJ, email, saldo e taxa do sistema.
+ *
+ * @author viniciuslemes10
+ * @author gemeoslemes
+ */
 @Entity()
 @Table(name = "empresas")
 @Getter
@@ -33,6 +40,11 @@ public class Empresa {
     @Column(name = "ativo")
     private boolean ativo;
 
+    /**
+     * Construtor para criar um objeto Empresa a partir de um objeto EmpresaDTO.
+     *
+     * @param empresaDTO o DTO da empresa contendo informações para inicialização
+     */
     public Empresa(EmpresaDTO empresaDTO) {
         this.nome = empresaDTO.nome().trim().replaceAll("\\s+", " ");
         this.cnpj = empresaDTO.cnpj().trim().replaceAll("\\s+", "");
@@ -46,12 +58,22 @@ public class Empresa {
         this.ativo = true;
     }
 
+    /**
+     * Construtor para criar um objeto Empresa a partir de um objeto EmpresaUpdateDTO.
+     *
+     * @param empresaUpdateDTO o DTO de atualização da empresa contendo informações para inicialização
+     */
     public Empresa(EmpresaUpdateDTO empresaUpdateDTO) {
         this.nome = empresaUpdateDTO.nome().trim();
         this.email = empresaUpdateDTO.email().trim();
         this.taxaSistema = empresaUpdateDTO.taxaSistema();
     }
 
+    /**
+     * Retorna uma representação em forma de string do objeto Empresa.
+     *
+     * @return uma string representando o objeto Empresa
+     */
     @Override
     public String toString() {
         return "Empresa{" +
