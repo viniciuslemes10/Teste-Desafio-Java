@@ -6,7 +6,8 @@ import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 /**
- * @author viniciuslemes, gemeoslemes<br>
+ * @author viniciuslemes10
+ * @author gemeoslemes<br>
  * Representa uma mensagem de erro que utiliza em respostas de serviços REST.
  *
  * <p>

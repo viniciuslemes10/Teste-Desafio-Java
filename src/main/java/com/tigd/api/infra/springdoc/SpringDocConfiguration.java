@@ -7,8 +7,25 @@ import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuração do Spring para a geração de documentação OpenAPI com Springdoc OpenAPI.
+ *
+ * Esta classe fornece configurações específicas do Spring necessárias para a geração de documentação OpenAPI
+ * usando a biblioteca Springdoc OpenAPI.
+ *
+ * @author viniciuslemes10
+ * @author gemeoslemes
+ */
+
 @Configuration
 public class SpringDocConfiguration {
+    /**
+     * Método para criar e configurar um objeto OpenAPI personalizado.
+     * Este método retorna uma instância de OpenAPI contendo informações sobre a API SF.api.
+     * A API inclui funcionalidades de CRUD para clientes e empresas, além de transações.
+     *
+     * @return Um objeto OpenAPI configurado para a API SF.api
+     */
     @Bean
     public OpenAPI customOpenAPI() {
 
