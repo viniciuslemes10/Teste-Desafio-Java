@@ -6,7 +6,7 @@ import com.tigd.api.exceptions.ContaInativaException;
 import com.tigd.api.exceptions.EmailUniqueException;
 import com.tigd.api.exceptions.EmpresaNotFoundException;
 import com.tigd.api.repository.EmpresaRepository;
-import com.tigd.api.validators.ContaValidador;
+import com.tigd.api.validators.ValidadorAtualizadorEntidade;
 import com.tigd.api.validators.DocumentValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class EmpresaService {
     private DocumentValidator documentValidator;
 
     @Autowired
-    private ContaValidador contaValidador;
+    private ValidadorAtualizadorEntidade atualizadorEntidade;
 
     /**
      * <p>Método <b>findAllEmpresa()</b> para listar todas as empresas
@@ -172,7 +172,7 @@ public class EmpresaService {
         Optional<Empresa> empresaById = buscarEmpresaPorId(id);
         verificarEmailAtivoDaEmpresa(empresaById.get());
         verificarExistenciaEmailNaBaseDeDados(empresa);
-        Empresa updateCompany = contaValidador.verifyNameAndEmailAndRateSystemNotNull(empresa, empresaById);
+        Empresa updateCompany = atualizadorEntidade.verifyNameAndEmailAndRateSystemNotNull(empresa, empresaById);
 
         return empresaRepository.save(updateCompany);
     }

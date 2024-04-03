@@ -2,7 +2,6 @@ package com.tigd.api.validators;
 
 import com.tigd.api.domain.Cliente;
 import com.tigd.api.domain.Empresa;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -10,7 +9,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 @Component
-public class ContaValidador {
+public class ValidadorAtualizadorEntidade {
 
     /**
      * Verifica se os campos nome, email e taxa do sistema da empresa não são nulos.
