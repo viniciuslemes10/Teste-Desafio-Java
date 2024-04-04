@@ -135,18 +135,6 @@ public class ClienteService {
     }
 
     /**
-     * Define o valor em um objeto usando um setter fornecido, se o valor não for nulo ou vazio.
-     *
-     * @param value  o valor a ser definido no objeto.
-     * @param setter o setter que será usado para definir o valor no objeto.
-     */
-    private void setValueIfNotNullOrEmpty(String value, Consumer<String> setter) {
-        if(value != null && !value.isEmpty()) {
-            setter.accept(value);
-        }
-    }
-
-    /**
      * Atualiza as informações de um cliente na base de dados.
      *
      * Este método recebe um cliente como parâmetro e realiza as seguintes operações:
