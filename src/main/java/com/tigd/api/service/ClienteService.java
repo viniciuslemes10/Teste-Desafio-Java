@@ -150,7 +150,7 @@ public class ClienteService {
      * @see #validarContaAtiva(Cliente)
      * @see #isEmailPresent(Cliente)
      */
-    private Cliente update(Cliente cliente) {
+    protected Cliente update(Cliente cliente) {
         Cliente clienteAtivo = encontrarClienteAtivo(cliente.getId(), cliente.isAtivo());
         validarContaAtiva(clienteAtivo);
         isEmailPresent(clienteAtivo);
