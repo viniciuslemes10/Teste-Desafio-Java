@@ -53,15 +53,15 @@ public class Cliente {
         this.ativo = true;
     }
 
-    /**
-     * Construtor para criar um objeto Cliente a partir de um objeto ClienteUpdateDTO.
-     *
-     * @param clienteUpdateDTO o DTO de atualização do cliente contendo informações para inicialização
-     */
-    public Cliente(ClienteUpdateDTO clienteUpdateDTO) {
-        this.nome = clienteUpdateDTO.nome().trim();
-        this.email = clienteUpdateDTO.email().trim();
-    }
+//    /**
+//     * Construtor para criar um objeto Cliente a partir de um objeto ClienteUpdateDTO.
+//     *
+//     * @param clienteUpdateDTO o DTO de atualização do cliente contendo informações para inicialização
+//     */
+//    public Cliente(ClienteUpdateDTO clienteUpdateDTO) {
+//        this.nome = clienteUpdateDTO.nome().trim();
+//        this.email = clienteUpdateDTO.email().trim();
+//    }
 
     /**
      * Retorna uma representação em forma de string do objeto Cliente.
@@ -76,6 +76,7 @@ public class Cliente {
                 ", cpf='" + cpf + '\'' +
                 ", email='" + email + '\'' +
                 ", saldo=" + saldo +
+                ", ativo=" + ativo +
                 '}';
     }
 }

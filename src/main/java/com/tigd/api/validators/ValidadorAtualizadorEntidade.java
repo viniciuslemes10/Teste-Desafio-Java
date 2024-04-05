@@ -2,6 +2,7 @@ package com.tigd.api.validators;
 
 import com.tigd.api.domain.Cliente;
 import com.tigd.api.domain.Empresa;
+import com.tigd.api.dto.ClienteUpdateDTO;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -40,21 +41,6 @@ public class ValidadorAtualizadorEntidade {
         return empresaOptional.get();
     }
 
-    /**
-     * Verifica se o nome e o email do cliente não são nulos ou vazios e define-os em um objeto Cliente existente, se presente.
-     *
-     * @param cliente         o cliente com as informações a serem verificadas e definidas.
-     * @param clienteOptional o Optional que contém o cliente existente, se presente.
-     * @return o cliente existente após definir as informações, se presente.
-     * @see #setValueIfNotNullOrEmpty(String, Consumer)
-     */
-    public Cliente verifyNameAndEmailNotNull(Cliente cliente, Optional<Cliente> clienteOptional) {
-        clienteOptional.ifPresent(clienteExitente -> {
-            setValueIfNotNullOrEmpty(cliente.getNome(), clienteExitente::setNome);
-            setValueIfNotNullOrEmpty(cliente.getEmail(), clienteExitente::setEmail);
-        });
-        return clienteOptional.get();
-    }
 
     /**
      * Verifica se o valor não é nulo e nem vazio, caso ele não for o Consumer aceita o argumento,

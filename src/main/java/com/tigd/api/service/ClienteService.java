@@ -1,5 +1,6 @@
 package com.tigd.api.service;
 
+import com.tigd.api.dto.ClienteUpdateDTO;
 import com.tigd.api.exceptions.*;
 import com.tigd.api.repository.ClienteRepository;
 import com.tigd.api.domain.Cliente;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  @author gemeoslemes viniciuslemes10 <br>
@@ -115,6 +115,7 @@ public class ClienteService {
         }
     }
 
+
     /**
      @param cliente cliente.
      @return Salvando cliente com saldo atualizado na base de dados.
@@ -124,37 +125,32 @@ public class ClienteService {
     }
 
     /**
-     * @param cliente cliente
+     * @param dto cliente
      * @param id id
      * @return <p>Retorna um cliente atualizado.</p>
      **/
-    public Cliente updateClient(Cliente cliente, Long id) {
+    public Cliente updateClient(ClienteUpdateDTO dto, Long id) {
         Optional<Cliente> clientById = findById(id);
-        Cliente clienteAtualizado = atualizadorEntidade.verifyNameAndEmailNotNull(cliente, clientById);
-        return update(clienteAtualizado);
-    }
-
-    /**
-     * Atualiza as informações de um cliente na base de dados.
-     *
-     * Este método recebe um cliente como parâmetro e realiza as seguintes operações:
-     * - Busca na base de dados o cliente ativo com base no ID fornecido.
-     * - Valida se a conta do cliente está ativa.
-     * - Verifica se o email do cliente já está presente na base de dados.
-     * - Salva o cliente na base de dados após as operações de validação.
-     *
-     * @param cliente o cliente cujas informações serão atualizadas.
-     * @return o cliente atualizado na base de dados.
-     * @throws ContaInativaException se a conta do cliente estiver inativa.
-     * @see #encontrarClienteAtivo(Long, boolean)
-     * @see #validarContaAtiva(Cliente)
-     * @see #isEmailPresent(Cliente)
-     */
-    protected Cliente update(Cliente cliente) {
-        Cliente clienteAtivo = encontrarClienteAtivo(cliente.getId(), cliente.isAtivo());
+        Cliente clienteAtualizado = atualizaDados(dto, clientById);
+        Cliente clienteAtivo = byAtivo(clienteAtualizado.getId(), clienteAtualizado.isAtivo());
         validarContaAtiva(clienteAtivo);
         isEmailPresent(clienteAtivo);
-        return clienteRepository.save(cliente);
+        return clienteRepository.save(clienteAtualizado);
+    }
+
+    protected Cliente atualizaDados(ClienteUpdateDTO dto, Optional<Cliente> cliente) {
+        Cliente clienteExistente = cliente.get();
+        if (!dto.nome().trim().equals(clienteExistente.getNome())) {
+            clienteExistente.setNome(dto.nome());
+        }
+        if (!dto.email().trim().equals(clienteExistente.getEmail())) {
+            clienteExistente.setEmail(dto.email());
+        }
+        return clienteExistente;
+    }
+
+    protected Cliente byAtivo(Long id, boolean ativo) {
+        return clienteRepository.findByAtivo(id, ativo);
     }
 
     /**
@@ -163,23 +159,12 @@ public class ClienteService {
      * @param cliente o cliente cuja conta será validada.
      * @throws ContaInativaException se a conta do cliente estiver inativa.
      */
-    private void validarContaAtiva(Cliente cliente) {
+    protected void validarContaAtiva(Cliente cliente) {
         if (!cliente.isAtivo()) {
             throw new ContaInativaException();
         }
     }
 
-    /**
-     * Encontra um cliente ativo na base de dados com base no status de ativação fornecido.
-     *
-     * @param id do cliente que devemos buscar.
-     * @param ativo o status de ativação do cliente a ser encontrado.
-     *
-     * @return o cliente ativo encontrado na base de dados.
-     */
-    private Cliente encontrarClienteAtivo(Long id, boolean ativo) {
-        return clienteRepository.findByAtivo(id, ativo);
-    }
 
     /**
      * @param cliente cliente
@@ -189,9 +174,9 @@ public class ClienteService {
      * @return cliente.
      ***/
     public Cliente deleteClientById(Optional<Cliente> cliente) {
-        Cliente client = cliente.get();
-        client.setAtivo(false);
-        clienteRepository.save(client);
-        return client;
+        Cliente clienteInativado = cliente.get();
+        clienteInativado.setAtivo(false);
+        clienteRepository.save(clienteInativado);
+        return clienteInativado;
     }
 }

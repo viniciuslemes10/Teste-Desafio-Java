@@ -13,10 +13,12 @@ import org.mockito.Mock;
 
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 
-class ClienteServiceTest  {
+@ActiveProfiles("test")
+class ClienteSaveServiceTest {
     @Mock
     private ClienteRepository clienteRepository;
 
@@ -41,7 +43,6 @@ class ClienteServiceTest  {
         Cliente cliente = testAuxiliaresClienteService.createCliente(1L, "gemeoslemes", "375.243.170-93",
                 "gemeos@tgid.com", new BigDecimal(100), true);
         testAuxiliaresClienteService.mockDocumentValidator(cliente);
-        cliente.setCpf("37524317093");
         testAuxiliaresClienteService.verifySaveAndFindMethods(cliente);
     }
 
@@ -51,7 +52,6 @@ class ClienteServiceTest  {
         Cliente cliente = testAuxiliaresClienteService.createCliente(1L, "gemeoslemes", "375.243.170-93",
                 "gemeos@tgid.com", new BigDecimal(100), true);
         testAuxiliaresClienteService.mockDocumentValidator(cliente);
-        cliente.setCpf("37524317093");
         testAuxiliaresClienteService.verifySaveAndFindMethods(cliente);
 
         Cliente cliente2 = testAuxiliaresClienteService.createCliente(2L, "viniciuslemes10", "375.243.170-93",
@@ -70,13 +70,12 @@ class ClienteServiceTest  {
         Cliente cliente = testAuxiliaresClienteService.createCliente(1L, "gemeoslemes", "375.243.170-93",
                 "gemeos@tgid.com", new BigDecimal(100), true);
         testAuxiliaresClienteService.mockDocumentValidator(cliente);
-        cliente.setCpf("37524317093");
+
         testAuxiliaresClienteService.verifySaveAndFindMethods(cliente);
 
         Cliente cliente2 = testAuxiliaresClienteService.createCliente(2L, "viniciuslemes10", "570.599.380-36",
                 "gemeos@tgid.com", new BigDecimal(1000), true);
         testAuxiliaresClienteService.mockDocumentValidator(cliente2);
-        cliente2.setCpf("57059938036");
         testAuxiliaresClienteService.simulateFindByEmial(cliente2);
 
         EmailUniqueException exception = new EmailUniqueException();
