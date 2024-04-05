@@ -141,10 +141,10 @@ public class ClienteService {
     protected Cliente atualizaDados(ClienteUpdateDTO dto, Optional<Cliente> cliente) {
         Cliente clienteExistente = cliente.get();
         if (!dto.nome().trim().equals(clienteExistente.getNome())) {
-            clienteExistente.setNome(dto.nome());
+            clienteExistente.setNome(dto.nome().trim());
         }
         if (!dto.email().trim().equals(clienteExistente.getEmail())) {
-            clienteExistente.setEmail(dto.email());
+            clienteExistente.setEmail(dto.email().trim());
         }
         return clienteExistente;
     }
